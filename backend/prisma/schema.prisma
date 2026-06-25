@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      String   // "medecin" ou "patient"
+  createdAt DateTime @default(now())
+  medecin   Medecin?
+  patient   Patient?
+}
+
+model Medecin {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id])
+  prenom     String
+  nom        String
+  telephone  String
+  specialite String
+  rpps       String   @unique
+  createdAt  DateTime @default(now())
+  rdvs       RDV[]
+}
+
+model Patient {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  prenom        String
+  nom           String
+  telephone     String
+  dateNaissance String
+  nss           String   @unique
+  createdAt     DateTime @default(now())
+  rdvs          RDV[]
+  ordonnances   Ordonnance[]
+  dossier       Dossier?
+}
+
+model RDV {
+  id        String   @id @default(uuid())
+  medecinId String
+  patientId String
+  medecin   Medecin  @relation(fields: [medecinId], references: [id])
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  date      String
+  heure     String
+  motif     String
+  statut    String   @default("en_attente")
+  createdAt DateTime @default(now())
+}
+
+model Ordonnance {
+  id        String   @id @default(uuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  contenu   String
+  date      String
+  createdAt DateTime @default(now())
+}
+
+model Dossier {
+  id         String   @id @default(uuid())
+  patientId  String   @unique
+  patient    Patient  @relation(fields: [patientId], references: [id])
+  antecedents String  @default("")
+  allergies   String  @default("")
+  notes       String  @default("")
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  lu        Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
