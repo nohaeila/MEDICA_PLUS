@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "MEDICA+",
+    "slug": "medica-plus",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#f0f4ff"
+      }
+    }
+  }
+}
