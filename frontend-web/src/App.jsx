@@ -8,6 +8,7 @@ import Agenda from "./pages/Agenda"
 import Notifications from "./pages/Notifications"
 import GestionRDV from "./pages/GestionRDV"
 import MesPatients from "./pages/MesPatients"
+import Consultation from "./pages/Consultation"
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
         <Route path="/mes-patients" element={<ProtectedRoute><MesPatients /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+        <Route path="/consultation/:patientId" element={<ProtectedRoute><Consultation /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   )
