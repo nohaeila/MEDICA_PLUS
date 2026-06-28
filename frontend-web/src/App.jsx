@@ -3,6 +3,7 @@ import Dashboard from "./pages/Dashboard"
 import ListeMedecins from "./pages/ListeMedecins"
 import PriseRDV from "./pages/PriseRDV"
 import Agenda from "./pages/Agenda"
+import Notifications from "./pages/Notifications"
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/medecins" element={<ListeMedecins />} />
         <Route path="/rdv" element={<PriseRDV />} />
         <Route path="/agenda" element={<Agenda />} />
+        <Route path="/notifications" element={<Notifications />} />
       </Routes>
     </BrowserRouter>
   )
