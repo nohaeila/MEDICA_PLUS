@@ -4,10 +4,10 @@ import Landing from "./pages/Landing"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import Dashboard from "./pages/Dashboard"
-import ListeMedecins from "./pages/ListeMedecins"
 import Agenda from "./pages/Agenda"
 import Notifications from "./pages/Notifications"
 import GestionRDV from "./pages/GestionRDV"
+import MesPatients from "./pages/MesPatients"
 
 function App() {
   return (
@@ -29,7 +29,7 @@ function App() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/gestion-rdv" element={<ProtectedRoute><GestionRDV /></ProtectedRoute>} />
         <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
-        <Route path="/medecins" element={<ProtectedRoute><ListeMedecins /></ProtectedRoute>} />
+        <Route path="/mes-patients" element={<ProtectedRoute><MesPatients /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>

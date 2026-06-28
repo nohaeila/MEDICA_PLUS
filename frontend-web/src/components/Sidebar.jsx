@@ -7,7 +7,7 @@ export default function Sidebar({ active }) {
     { label: "Dashboard", path: "/" },
     { label: "Gestion des RDV", path: "/gestion-rdv" },
     { label: "Agenda", path: "/agenda" },
-    { label: "Médecins", path: "/medecins" },
+    { label: "Mes patients", path: "/mes-patients" },
     { label: "Notifications", path: "/notifications" },
   ]
 
