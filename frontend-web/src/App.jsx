@@ -1,10 +1,15 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+import Dashboard from "./pages/Dashboard"
 import ListeMedecins from "./pages/ListeMedecins"
 
 function App() {
   return (
-    <div className="min-h-screen bg-slate-100">
-      <ListeMedecins />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/medecins" element={<ListeMedecins />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

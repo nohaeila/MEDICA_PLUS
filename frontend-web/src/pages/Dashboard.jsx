@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom"
+
 export default function Dashboard() {
+  const navigate = useNavigate()
   const medecin = { nom: "Dr. Ingrid M.", specialite: "Médecin Généraliste", avatar: "IM" }
 
   const rdv = [
@@ -16,11 +19,11 @@ export default function Dashboard() {
   }
 
   const nav = [
-    { label: "Dashboard", active: true },
-    { label: "Prise de RDV" },
-    { label: "Agenda" },
-    { label: "Médecins" },
-    { label: "Notifications" },
+    { label: "Dashboard", path: "/", active: true },
+    { label: "Prise de RDV", path: "/rdv" },
+    { label: "Agenda", path: "/agenda" },
+    { label: "Médecins", path: "/medecins" },
+    { label: "Notifications", path: "/notifications" },
   ]
 
   return (
@@ -33,6 +36,7 @@ export default function Dashboard() {
         <nav className="flex flex-col gap-1 flex-1">
           {nav.map((item) => (
             <button key={item.label}
+              onClick={() => navigate(item.path)}
               className={`text-left px-4 py-2.5 rounded-lg text-sm transition
                 ${item.active
                   ? "bg-blue-500 text-white font-medium"
@@ -55,7 +59,6 @@ export default function Dashboard() {
 
       {/* Contenu principal */}
       <main className="flex-1 p-8">
-
         <div className="mb-8">
           <p className="text-gray-400 text-sm">Bonjour,</p>
           <h2 className="text-2xl font-bold text-gray-800">{medecin.nom}</h2>
@@ -87,7 +90,6 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-
       </main>
     </div>
   )

@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom"
+
 export default function ListeMedecins() {
+  const navigate = useNavigate()
+
   const medecins = [
     { nom: "Dr. Martin Sophie", specialite: "Médecin généraliste", ville: "Paris 8e", disponible: true, avatar: "MS" },
     { nom: "Dr. Leblanc Pierre", specialite: "Cardiologue", ville: "Paris 15e", disponible: true, avatar: "LP" },
@@ -8,11 +12,11 @@ export default function ListeMedecins() {
   ]
 
   const nav = [
-    { label: "Dashboard" },
-    { label: "Prise de RDV" },
-    { label: "Agenda" },
-    { label: "Médecins", active: true },
-    { label: "Notifications" },
+    { label: "Dashboard", path: "/" },
+    { label: "Prise de RDV", path: "/rdv" },
+    { label: "Agenda", path: "/agenda" },
+    { label: "Médecins", path: "/medecins", active: true },
+    { label: "Notifications", path: "/notifications" },
   ]
 
   return (
@@ -24,6 +28,7 @@ export default function ListeMedecins() {
         <nav className="flex flex-col gap-1 flex-1">
           {nav.map((item) => (
             <button key={item.label}
+              onClick={() => navigate(item.path)}
               className={`text-left px-4 py-2.5 rounded-lg text-sm transition
                 ${item.active
                   ? "bg-blue-500 text-white font-medium"
@@ -45,13 +50,11 @@ export default function ListeMedecins() {
 
       {/* Contenu */}
       <main className="flex-1 p-8">
-
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800">Liste des médecins</h2>
           <p className="text-gray-400 text-sm mt-1">{medecins.length} médecins enregistrés</p>
         </div>
 
-        {/* Barre de recherche */}
         <div className="mb-6">
           <input
             type="text"
@@ -60,43 +63,29 @@ export default function ListeMedecins() {
           />
         </div>
 
-        {/* Liste */}
         <div className="flex flex-col gap-3">
           {medecins.map((m, i) => (
             <div key={i} className="bg-white rounded-2xl shadow-sm px-6 py-4 flex items-center gap-4">
-              {/* Avatar */}
               <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-600 flex-shrink-0">
                 {m.avatar}
               </div>
-
-              {/* Infos */}
               <div className="flex-1">
                 <p className="text-sm font-semibold text-gray-800">{m.nom}</p>
                 <p className="text-xs text-gray-400">{m.specialite} · {m.ville}</p>
               </div>
-
-              {/* Disponibilité */}
               <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                m.disponible
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-400"
+                m.disponible ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
               }`}>
                 {m.disponible ? "Disponible" : "Indisponible"}
               </span>
-
-              {/* Bouton */}
               <button className={`text-xs px-4 py-2 rounded-xl font-medium transition ${
-                m.disponible
-                  ? "bg-blue-500 text-white hover:bg-blue-600"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
-              }`}
-                disabled={!m.disponible}>
+                m.disponible ? "bg-blue-500 text-white hover:bg-blue-600" : "bg-gray-100 text-gray-400 cursor-not-allowed"
+              }`} disabled={!m.disponible}>
                 Prendre RDV
               </button>
             </div>
           ))}
         </div>
-
       </main>
     </div>
   )
