@@ -1,4 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
+import ProtectedRoute from "./components/ProtectedRoute"
+import Landing from "./pages/Landing"
+import Login from "./pages/Login"
+import Register from "./pages/Register"
 import Dashboard from "./pages/Dashboard"
 import ListeMedecins from "./pages/ListeMedecins"
 import Agenda from "./pages/Agenda"
@@ -9,11 +13,24 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/medecins" element={<ListeMedecins />} />
-        <Route path="/agenda" element={<Agenda />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/gestion-rdv" element={<GestionRDV />} />
+        {/* Page d'accueil */}
+        <Route path="/" element={
+          localStorage.getItem("token")
+            ? <ProtectedRoute><Dashboard /></ProtectedRoute>
+            : <Landing />
+        } />
+
+        {/* Pages publiques */}
+        <Route path="/landing" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Pages protégées */}
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/gestion-rdv" element={<ProtectedRoute><GestionRDV /></ProtectedRoute>} />
+        <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
+        <Route path="/medecins" element={<ProtectedRoute><ListeMedecins /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   )

@@ -11,6 +11,13 @@ export default function Sidebar({ active }) {
     { label: "Notifications", path: "/notifications" },
   ]
 
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    localStorage.removeItem("userId")
+    localStorage.removeItem("role")
+    navigate("/login")
+  }
+
   return (
     <aside className="w-60 bg-white border-r border-gray-200 flex flex-col p-6 shadow-sm">
       <h1 className="text-xl font-bold text-blue-500 mb-10">MEDICA+</h1>
@@ -37,6 +44,11 @@ export default function Sidebar({ active }) {
           <p className="text-xs text-gray-400">Médecin Généraliste</p>
         </div>
       </div>
+
+      <button onClick={handleLogout}
+        className="w-full text-left px-4 py-2.5 rounded-lg text-sm text-red-400 hover:bg-red-50 transition mt-3">
+        Déconnexion
+      </button>
     </aside>
   )
 }
