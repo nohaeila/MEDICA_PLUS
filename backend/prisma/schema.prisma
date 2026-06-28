@@ -24,24 +24,28 @@ enum Role {
 }
 
 model Medecin {
-  id         Int          @id @default(autoincrement())
-  nom        String
-  prenom     String
-  specialite String
-  ville      String
-  userId     Int          @unique
-  user       User         @relation(fields: [userId], references: [id])
-  rendezvous RendezVous[]
+  id          Int          @id @default(autoincrement())
+  nom         String
+  prenom      String
+  specialite  String
+  ville       String
+  userId      Int          @unique
+  user        User         @relation(fields: [userId], references: [id])
+  rendezvous  RendezVous[]
+  ordonnances Ordonnance[]
+  rapports    Rapport[]
 }
 
 model Patient {
-  id         Int          @id @default(autoincrement())
-  nom        String
-  prenom     String
-  nss        String
-  userId     Int          @unique
-  user       User         @relation(fields: [userId], references: [id])
-  rendezvous RendezVous[]
+  id          Int          @id @default(autoincrement())
+  nom         String
+  prenom      String
+  nss         String
+  userId      Int          @unique
+  user        User         @relation(fields: [userId], references: [id])
+  rendezvous  RendezVous[]
+  ordonnances Ordonnance[]
+  rapports    Rapport[]
 }
 
 model RendezVous {
@@ -70,5 +74,28 @@ model Notification {
   message   String
   lu        Boolean  @default(false)
   userId    Int
+  createdAt DateTime @default(now())
+}
+
+model Ordonnance {
+  id         Int      @id @default(autoincrement())
+  medicament String
+  posologie  String
+  duree      String
+  notes      String?
+  medecinId  Int
+  patientId  Int
+  medecin    Medecin  @relation(fields: [medecinId], references: [id])
+  patient    Patient  @relation(fields: [patientId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Rapport {
+  id        Int      @id @default(autoincrement())
+  contenu   String
+  medecinId Int
+  patientId Int
+  medecin   Medecin  @relation(fields: [medecinId], references: [id])
+  patient   Patient  @relation(fields: [patientId], references: [id])
   createdAt DateTime @default(now())
 }

@@ -15,11 +15,15 @@ const authRoutes = require("./routes/auth.routes")
 const medecinRoutes = require("./routes/medecin.routes")
 const rdvRoutes = require("./routes/rdv.routes")
 const notificationRoutes = require("./routes/notification.routes")
+const ordonnanceRoutes = require("./routes/ordonnance.routes")
+const rapportRoutes = require("./routes/rapport.routes")
 
 app.use("/api/auth", authRoutes)
 app.use("/api/medecins", medecinRoutes)
 app.use("/api/rdv", rdvRoutes)
 app.use("/api/notifications", notificationRoutes)
+app.use("/api/ordonnances", ordonnanceRoutes)
+app.use("/api/rapports", rapportRoutes)
 
 // Test route
 app.get("/", (req, res) => {

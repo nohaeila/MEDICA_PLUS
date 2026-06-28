@@ -26,4 +26,19 @@ const getMedecinById = async (req, res) => {
   }
 }
 
-module.exports = { getMedecins, getMedecinById }
+const getPatientsMedecin = async (req, res) => {
+  try {
+    const { id } = req.params
+    const rdvs = await prisma.rendezVous.findMany({
+      where: { medecinId: parseInt(id) },
+      include: { patient: true },
+      distinct: ['patientId']
+    })
+    const patients = rdvs.map(r => r.patient)
+    res.json(patients)
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error })
+  }
+}
+
+module.exports = { getMedecins, getMedecinById, getPatientsMedecin }
