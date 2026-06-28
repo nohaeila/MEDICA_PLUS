@@ -1,17 +1,8 @@
-import { useNavigate } from "react-router-dom"
 import { useState } from "react"
+import Sidebar from "../components/Sidebar"
 
 export default function Agenda() {
-  const navigate = useNavigate()
   const [moisActuel, setMoisActuel] = useState(new Date(2026, 5, 1))
-
-  const nav = [
-    { label: "Dashboard", path: "/" },
-    { label: "Prise de RDV", path: "/rdv" },
-    { label: "Agenda", path: "/agenda", active: true },
-    { label: "Médecins", path: "/medecins" },
-    { label: "Notifications", path: "/notifications" },
-  ]
 
   const rdv = [
     { date: "2026-06-18", heure: "08:30", patient: "Martin Alain", motif: "Consultation générale", statut: "Confirmé" },
@@ -58,37 +49,10 @@ export default function Agenda() {
       moisActuel.getFullYear() === aujourdhui.getFullYear()
   }
 
-  const moisPrecedent = () => setMoisActuel(new Date(moisActuel.getFullYear(), moisActuel.getMonth() - 1, 1))
-  const moisSuivant = () => setMoisActuel(new Date(moisActuel.getFullYear(), moisActuel.getMonth() + 1, 1))
-
   return (
     <div className="flex min-h-screen bg-slate-100 text-gray-800">
+      <Sidebar active="Agenda" />
 
-      {/* Sidebar */}
-      <aside className="w-60 bg-white border-r border-gray-200 flex flex-col p-6 shadow-sm">
-        <h1 className="text-xl font-bold text-blue-500 mb-10">MEDICA+</h1>
-        <nav className="flex flex-col gap-1 flex-1">
-          {nav.map((item) => (
-            <button key={item.label}
-              onClick={() => navigate(item.path)}
-              className={`text-left px-4 py-2.5 rounded-lg text-sm transition
-                ${item.active
-                  ? "bg-blue-500 text-white font-medium"
-                  : "text-gray-500 hover:bg-slate-100 hover:text-gray-800"}`}>
-              {item.label}
-            </button>
-          ))}
-        </nav>
-        <div className="border-t border-gray-100 pt-5 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-sm font-bold text-white">IM</div>
-          <div>
-            <p className="text-sm font-medium text-gray-800">Dr. Ingrid M.</p>
-            <p className="text-xs text-gray-400">Médecin Généraliste</p>
-          </div>
-        </div>
-      </aside>
-
-      {/* Contenu */}
       <main className="flex-1 p-8">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800">Agenda</h2>
@@ -96,13 +60,13 @@ export default function Agenda() {
         </div>
 
         <div className="grid grid-cols-2 gap-6">
-
-          {/* Calendrier */}
           <div className="bg-white rounded-2xl shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
-              <button onClick={moisPrecedent} className="text-gray-400 hover:text-gray-600 text-lg px-2">‹</button>
+              <button onClick={() => setMoisActuel(new Date(moisActuel.getFullYear(), moisActuel.getMonth() - 1, 1))}
+                className="text-gray-400 hover:text-gray-600 text-lg px-2">‹</button>
               <h3 className="text-sm font-semibold capitalize">{getNomMois(moisActuel)}</h3>
-              <button onClick={moisSuivant} className="text-gray-400 hover:text-gray-600 text-lg px-2">›</button>
+              <button onClick={() => setMoisActuel(new Date(moisActuel.getFullYear(), moisActuel.getMonth() + 1, 1))}
+                className="text-gray-400 hover:text-gray-600 text-lg px-2">›</button>
             </div>
 
             <div className="grid grid-cols-7 gap-1 mb-2">
@@ -114,9 +78,7 @@ export default function Agenda() {
             <div className="grid grid-cols-7 gap-1">
               {getJoursDuMois().map((jour, i) => (
                 <div key={i} className={`relative flex items-center justify-center h-9 rounded-lg text-sm cursor-pointer transition
-                  ${!jour ? "" :
-                    estAujourdhui(jour) ? "bg-blue-500 text-white font-bold" :
-                    "hover:bg-slate-100 text-gray-700"}`}>
+                  ${!jour ? "" : estAujourdhui(jour) ? "bg-blue-500 text-white font-bold" : "hover:bg-slate-100 text-gray-700"}`}>
                   {jour}
                   {aRDV(jour) && !estAujourdhui(jour) && (
                     <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-400"></span>
@@ -126,7 +88,6 @@ export default function Agenda() {
             </div>
           </div>
 
-          {/* Liste RDV */}
           <div className="bg-white rounded-2xl shadow-sm p-6">
             <h3 className="text-sm font-semibold mb-4">Prochains rendez-vous</h3>
             <div className="flex flex-col gap-3">
@@ -147,7 +108,6 @@ export default function Agenda() {
               ))}
             </div>
           </div>
-
         </div>
       </main>
     </div>

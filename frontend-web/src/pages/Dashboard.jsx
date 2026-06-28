@@ -1,9 +1,6 @@
-import { useNavigate } from "react-router-dom"
+import Sidebar from "../components/Sidebar"
 
 export default function Dashboard() {
-  const navigate = useNavigate()
-  const medecin = { nom: "Dr. Ingrid M.", specialite: "Médecin Généraliste", avatar: "IM" }
-
   const rdv = [
     { heure: "08:30", patient: "Martin Alain", motif: "Consultation générale", statut: "Confirmé" },
     { heure: "09:15", patient: "Sophie Bernard", motif: "Suivi cardiologique", statut: "En attente" },
@@ -18,50 +15,14 @@ export default function Dashboard() {
     "Urgent": "bg-red-100 text-red-600",
   }
 
-  const nav = [
-    { label: "Dashboard", path: "/", active: true },
-    { label: "Prise de RDV", path: "/rdv" },
-    { label: "Agenda", path: "/agenda" },
-    { label: "Médecins", path: "/medecins" },
-    { label: "Notifications", path: "/notifications" },
-  ]
-
   return (
     <div className="flex min-h-screen bg-slate-100 text-gray-800">
+      <Sidebar active="Dashboard" />
 
-      {/* Sidebar */}
-      <aside className="w-60 bg-white border-r border-gray-200 flex flex-col p-6 shadow-sm">
-        <h1 className="text-xl font-bold text-blue-500 mb-10">MEDICA+</h1>
-
-        <nav className="flex flex-col gap-1 flex-1">
-          {nav.map((item) => (
-            <button key={item.label}
-              onClick={() => navigate(item.path)}
-              className={`text-left px-4 py-2.5 rounded-lg text-sm transition
-                ${item.active
-                  ? "bg-blue-500 text-white font-medium"
-                  : "text-gray-500 hover:bg-slate-100 hover:text-gray-800"}`}>
-              {item.label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="border-t border-gray-100 pt-5 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
-            {medecin.avatar}
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-800">{medecin.nom}</p>
-            <p className="text-xs text-gray-400">{medecin.specialite}</p>
-          </div>
-        </div>
-      </aside>
-
-      {/* Contenu principal */}
       <main className="flex-1 p-8">
         <div className="mb-8">
           <p className="text-gray-400 text-sm">Bonjour,</p>
-          <h2 className="text-2xl font-bold text-gray-800">{medecin.nom}</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Dr. Ingrid M.</h2>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm p-6">
