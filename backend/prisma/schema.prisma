@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      Role     @default(PATIENT)
+  createdAt DateTime @default(now())
+  medecin   Medecin?
+  patient   Patient?
+}
+
+enum Role {
+  MEDECIN
+  PATIENT
+}
+
+model Medecin {
+  id         Int          @id @default(autoincrement())
+  nom        String
+  prenom     String
+  specialite String
+  ville      String
+  userId     Int          @unique
+  user       User         @relation(fields: [userId], references: [id])
+  rendezvous RendezVous[]
+}
+
+model Patient {
+  id         Int          @id @default(autoincrement())
+  nom        String
+  prenom     String
+  nss        String
+  userId     Int          @unique
+  user       User         @relation(fields: [userId], references: [id])
+  rendezvous RendezVous[]
+}
+
+model RendezVous {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  heure     String
+  motif     String
+  statut    Statut   @default(EN_ATTENTE)
+  medecinId Int
+  patientId Int
+  medecin   Medecin  @relation(fields: [medecinId], references: [id])
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+enum Statut {
+  CONFIRME
+  EN_ATTENTE
+  ANNULE
+  URGENT
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  titre     String
+  message   String
+  lu        Boolean  @default(false)
+  userId    Int
+  createdAt DateTime @default(now())
+}
