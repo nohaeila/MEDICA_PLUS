@@ -13,13 +13,12 @@ export default function Agenda() {
   ]
 
   const statutStyle = {
-    "Confirmé": "bg-green-100 text-green-700",
-    "En attente": "bg-orange-100 text-orange-600",
-    "Urgent": "bg-red-100 text-red-600",
+    "Confirmé": { background: "#dcfce7", color: "#15803d" },
+    "En attente": { background: "#ffedd5", color: "#c2410c" },
+    "Urgent": { background: "#fee2e2", color: "#dc2626" },
   }
 
   const joursNoms = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
-
   const getNomMois = (date) => date.toLocaleString("fr-FR", { month: "long", year: "numeric" })
 
   const getJoursDuMois = () => {
@@ -50,64 +49,81 @@ export default function Agenda() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-gray-800">
+    <div className="flex min-h-screen" style={{ background: "#f0f4ff" }}>
       <Sidebar active="Agenda" />
 
       <main className="flex-1 p-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800">Agenda</h2>
-          <p className="text-gray-400 text-sm mt-1">Gérez vos rendez-vous</p>
+          <h2 className="text-2xl font-bold" style={{ color: "#1e293b" }}>Agenda</h2>
+          <p className="text-sm mt-1" style={{ color: "#6b7280" }}>Gérez vos rendez-vous</p>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+
+          {/* Calendrier */}
+          <div className="p-6" style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <div className="flex items-center justify-between mb-6">
               <button onClick={() => setMoisActuel(new Date(moisActuel.getFullYear(), moisActuel.getMonth() - 1, 1))}
-                className="text-gray-400 hover:text-gray-600 text-lg px-2">‹</button>
-              <h3 className="text-sm font-semibold capitalize">{getNomMois(moisActuel)}</h3>
+                className="text-lg px-2 transition"
+                style={{ color: "#6b7280" }}>‹</button>
+              <h3 className="text-sm font-semibold capitalize" style={{ color: "#1e293b" }}>
+                {getNomMois(moisActuel)}
+              </h3>
               <button onClick={() => setMoisActuel(new Date(moisActuel.getFullYear(), moisActuel.getMonth() + 1, 1))}
-                className="text-gray-400 hover:text-gray-600 text-lg px-2">›</button>
+                className="text-lg px-2 transition"
+                style={{ color: "#6b7280" }}>›</button>
             </div>
 
             <div className="grid grid-cols-7 gap-1 mb-2">
               {joursNoms.map(j => (
-                <div key={j} className="text-center text-xs text-gray-400 font-medium py-1">{j}</div>
+                <div key={j} className="text-center text-xs font-medium py-1" style={{ color: "#6b7280" }}>{j}</div>
               ))}
             </div>
 
             <div className="grid grid-cols-7 gap-1">
               {getJoursDuMois().map((jour, i) => (
-                <div key={i} className={`relative flex items-center justify-center h-9 rounded-lg text-sm cursor-pointer transition
-                  ${!jour ? "" : estAujourdhui(jour) ? "bg-blue-500 text-white font-bold" : "hover:bg-slate-100 text-gray-700"}`}>
+                <div key={i} className="relative flex items-center justify-center h-9 text-sm cursor-pointer transition"
+                  style={{
+                    borderRadius: 8,
+                    background: estAujourdhui(jour) ? "#4f8ef7" : "transparent",
+                    color: estAujourdhui(jour) ? "#ffffff" : jour ? "#1e293b" : "transparent",
+                    fontWeight: estAujourdhui(jour) ? "bold" : "normal",
+                  }}>
                   {jour}
                   {aRDV(jour) && !estAujourdhui(jour) && (
-                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-400"></span>
+                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                      style={{ background: "#4f8ef7" }}></span>
                   )}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <h3 className="text-sm font-semibold mb-4">Prochains rendez-vous</h3>
+          {/* Liste RDV */}
+          <div className="p-6" style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <h3 className="text-sm font-semibold mb-4" style={{ color: "#1e293b" }}>Prochains rendez-vous</h3>
             <div className="flex flex-col gap-3">
               {rdv.map((r, i) => (
-                <div key={i} className="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3">
-                  <div className="flex flex-col items-center bg-blue-50 rounded-lg px-2 py-1 w-12 flex-shrink-0">
-                    <span className="text-blue-500 font-bold text-xs">{r.date.split("-")[2]}</span>
-                    <span className="text-blue-400 text-xs">{r.heure}</span>
+                <div key={i} className="flex items-center gap-3 px-4 py-3"
+                  style={{ background: "#f0f4ff", borderRadius: 12 }}>
+                  <div className="flex flex-col items-center px-2 py-1 w-12 flex-shrink-0"
+                    style={{ background: "#e0ecff", borderRadius: 8 }}>
+                    <span className="font-bold text-xs" style={{ color: "#4f8ef7" }}>{r.date.split("-")[2]}</span>
+                    <span className="text-xs" style={{ color: "#4f8ef7" }}>{r.heure}</span>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">{r.patient}</p>
-                    <p className="text-xs text-gray-400">{r.motif}</p>
+                    <p className="text-sm font-medium" style={{ color: "#1e293b" }}>{r.patient}</p>
+                    <p className="text-xs" style={{ color: "#6b7280" }}>{r.motif}</p>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${statutStyle[r.statut]}`}>
+                  <span className="text-xs px-2 py-1 font-medium"
+                    style={{ borderRadius: 20, ...statutStyle[r.statut] }}>
                     {r.statut}
                   </span>
                 </div>
               ))}
             </div>
           </div>
+
         </div>
       </main>
     </div>

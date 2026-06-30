@@ -7,13 +7,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        'med-bg': '#070b14',
-        'med-card': '#0d1321',
-        'med-blue': '#3b9eff',
-        'med-gold': '#c9a84c',
-        'med-text': '#d0e4f7',
-        'med-border': '#1e3a5f',
-        'med-btn': '#0a4d8c',
+        primary: "#4f8ef7",
+        bgapp: "#f0f4ff",
+        card: "#ffffff",
+        textmain: "#1e293b",
+        textsub: "#6b7280",
+        border: "#e2e8f0",
       }
     },
   },

@@ -11,10 +11,10 @@ export default function Notifications() {
   ])
 
   const typeStyle = {
-    rdv: "bg-green-100 text-green-600",
-    annulation: "bg-orange-100 text-orange-600",
-    urgent: "bg-red-100 text-red-600",
-    rappel: "bg-blue-100 text-blue-600",
+    rdv: { background: "#dcfce7", color: "#15803d" },
+    annulation: { background: "#ffedd5", color: "#c2410c" },
+    urgent: { background: "#fee2e2", color: "#dc2626" },
+    rappel: { background: "#e0ecff", color: "#4f8ef7" },
   }
 
   const typeIcon = {
@@ -26,38 +26,46 @@ export default function Notifications() {
   const nonLues = notifications.filter(n => !n.lu).length
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-gray-800">
+    <div className="flex min-h-screen" style={{ background: "#f0f4ff" }}>
       <Sidebar active="Notifications" />
 
       <main className="flex-1 p-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">Notifications</h2>
-            <p className="text-gray-400 text-sm mt-1">
+            <h2 className="text-2xl font-bold" style={{ color: "#1e293b" }}>Notifications</h2>
+            <p className="text-sm mt-1" style={{ color: "#6b7280" }}>
               {nonLues > 0 ? `${nonLues} non lue${nonLues > 1 ? "s" : ""}` : "Tout est à jour"}
             </p>
           </div>
           {nonLues > 0 && (
-            <button onClick={toutMarquerLu} className="text-sm text-blue-500 hover:text-blue-600 font-medium">
+            <button onClick={toutMarquerLu} className="text-sm font-medium transition" style={{ color: "#4f8ef7" }}>
               Tout marquer comme lu
             </button>
           )}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm divide-y divide-gray-100">
-          {notifications.map((n) => (
+        <div style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          {notifications.map((n, i) => (
             <div key={n.id} onClick={() => marquerLu(n.id)}
-              className={`flex items-start gap-4 px-6 py-4 cursor-pointer hover:bg-slate-50 transition ${!n.lu ? "bg-blue-50/30" : ""}`}>
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 ${typeStyle[n.type]}`}>
+              className="flex items-start gap-4 px-6 py-4 cursor-pointer transition"
+              style={{
+                borderBottom: i < notifications.length - 1 ? "1px solid #e2e8f0" : "none",
+                background: !n.lu ? "#f0f4ff" : "transparent",
+              }}>
+
+              <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5"
+                style={typeStyle[n.type]}>
                 {typeIcon[n.type]}
               </div>
+
               <div className="flex-1">
-                <p className={`text-sm font-medium ${!n.lu ? "text-gray-900" : "text-gray-600"}`}>{n.titre}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{n.message}</p>
+                <p className="text-sm font-medium" style={{ color: !n.lu ? "#1e293b" : "#6b7280" }}>{n.titre}</p>
+                <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>{n.message}</p>
               </div>
+
               <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                <span className="text-xs text-gray-400">{n.heure}</span>
-                {!n.lu && <span className="w-2 h-2 rounded-full bg-blue-500"></span>}
+                <span className="text-xs" style={{ color: "#6b7280" }}>{n.heure}</span>
+                {!n.lu && <span className="w-2 h-2 rounded-full" style={{ background: "#4f8ef7" }}></span>}
               </div>
             </div>
           ))}
