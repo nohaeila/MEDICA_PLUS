@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import PriseRDV from '../screens/patient/PriseRDV';
-
+import Notifications from '../screens/patient/Notifications';
 import Login from '../screens/auth/Login';
 import Register from '../screens/auth/Register';
 import Dashboard from '../screens/patient/Dashboard';
@@ -12,10 +12,12 @@ import Ordonnances from '../screens/patient/Ordonnances';
 import RendezVous from '../screens/patient/RendezVous';
 import Dossier from '../screens/patient/Dossier';
 import Profil from '../screens/patient/Profil';
+import ProfilMedecin from '../screens/patient/ProfilMedecin';
+import SanteProfil from '../screens/patient/SanteProfil';
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-
 
 const PatientTabs = () => {
   return (
@@ -60,9 +62,14 @@ const AppNavigator = () => {
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="PatientTabs" component={PatientTabs} />
         <Stack.Screen name="PriseRDV" component={PriseRDV} />
+        <Stack.Screen name="Notifications" component={Notifications} />
+        <Stack.Screen name="ProfilMedecin" component={ProfilMedecin} />
+        <Stack.Screen name="SanteProfil" component={SanteProfil} />
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
 
 export default AppNavigator;
+
+

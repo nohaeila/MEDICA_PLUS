@@ -44,11 +44,6 @@ const register = async (req, res) => {
         return res.status(400).json({ error: rppsError });
       }
     }
-    if (password !== confirm) {
-  return res.status(400).json({
-    error: 'Les mots de passe ne correspondent pas'
-  });
-}
 
     // Validation champs patient
     if (role === 'patient') {

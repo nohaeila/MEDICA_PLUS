@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, ActivityIndicator
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -13,20 +11,22 @@ const Login = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const response = await api.post('/auth/login', {
-        email, password, role: 'patient'
-      });
-      navigation.replace('PatientTabs');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Email ou mot de passe incorrect');
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleLogin = async () => {
+  setError('');
+  setLoading(true);
+  try {
+    const response = await api.post('/auth/login', {
+      email, password, role: 'patient'
+    });
+    await AsyncStorage.setItem('token', response.data.token);
+    await AsyncStorage.setItem('role', response.data.role);
+    navigation.replace('PatientTabs');
+  } catch (err) {
+    setError(err.response?.data?.error || 'Email ou mot de passe incorrect');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

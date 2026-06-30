@@ -21,3 +21,18 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Serveur MEDICA+ lancé sur le port ${PORT}`);
 });
+
+const medecinsRoutes = require('./routes/medecins.routes');
+app.use('/api/medecins', medecinsRoutes);
+
+const ordonnancesRoutes = require('./routes/ordonnances.routes');
+app.use('/api/ordonnances', ordonnancesRoutes);
+
+const notificationsRoutes = require('./routes/notifications.routes');
+app.use('/api/notifications', notificationsRoutes);
+
+const profilRoutes = require('./routes/profil.routes');
+app.use('/api/profil', profilRoutes);
+
+const dossierRoutes = require('./routes/dossier.routes');
+app.use('/api/dossier', dossierRoutes);

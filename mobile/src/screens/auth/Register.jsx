@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, ActivityIndicator
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const Register = ({ navigation }) => {
   const [form, setForm] = useState({
@@ -21,41 +20,47 @@ const Register = ({ navigation }) => {
   const handleChange = (name, value) => {
     setForm({ ...form, [name]: value });
   };
-
   const handleSubmit = async () => {
-    setError('');
-    setDetails([]);
-    setLoading(true);
+  setError('');
+  setDetails([]);
+  setLoading(true);
 
-    if (form.password !== form.confirm) {
-      setError('Les mots de passe ne correspondent pas');
-      setLoading(false);
-      return;
-    }
+  console.log('password:', JSON.stringify(form.password));
+  console.log('confirm:', JSON.stringify(form.confirm));
+  console.log('equal:', form.password === form.confirm);
 
-    try {
-      const response = await api.post('/auth/register', {
-        email: form.email,
-        password: form.password,
-        role: 'patient',
-        prenom: form.prenom,
-        nom: form.nom,
-        telephone: form.telephone,
-        dateNaissance: form.dateNaissance,
-        nss: form.nss
-      });
-      navigation.replace('PatientTabs');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Une erreur est survenue');
-      setDetails(err.response?.data?.details || []);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (form.password !== form.confirm) {
+    setError('Les mots de passe ne correspondent pas');
+    setLoading(false);
+    return;
+  }
 
+  try {
+    console.log('Envoi requete...');
+    const response = await api.post('/auth/register', {
+      email: form.email,
+      password: form.password,
+      role: 'patient',
+      prenom: form.prenom,
+      nom: form.nom,
+      telephone: form.telephone,
+      dateNaissance: form.dateNaissance,
+      nss: form.nss
+    });
+    console.log('Reponse:', response.data);
+    await AsyncStorage.setItem('token', response.data.token);
+    await AsyncStorage.setItem('role', response.data.role);
+    navigation.replace('PatientTabs');
+  } catch (err) {
+    console.log('Erreur:', err.response?.data);
+    setError(err.response?.data?.error || 'Une erreur est survenue');
+    setDetails(err.response?.data?.details || []);
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <ScrollView contentContainerStyle={styles.container}>
-
 
 
       {/* HEADER */}
@@ -145,13 +150,16 @@ const Register = ({ navigation }) => {
         <Text style={styles.label}>MOT DE PASSE</Text>
         <View style={styles.inputWrapper}>
           <Ionicons name="lock-closed-outline" size={18} color="#8a99b3" style={styles.inputIcon} />
-          <TextInput
-            style={styles.input}
-            placeholder="••••••••"
-            placeholderTextColor="#b0bec5"
-            onChangeText={(v) => handleChange('password', v)}
-            secureTextEntry={!showPassword}
-          />
+            <TextInput
+  style={styles.input}
+  placeholder="••••••••"
+  placeholderTextColor="#b0bec5"
+  onChangeText={(v) => handleChange('password', v)}
+  secureTextEntry={!showPassword}
+  autoCapitalize="none"
+  autoCorrect={false}
+  textContentType="oneTimeCode"
+/>
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
             <Ionicons
               name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -162,13 +170,16 @@ const Register = ({ navigation }) => {
         <Text style={styles.label}>CONFIRMER LE MOT DE PASSE</Text>
         <View style={styles.inputWrapper}>
           <Ionicons name="lock-closed-outline" size={18} color="#8a99b3" style={styles.inputIcon} />
-          <TextInput
-            style={styles.input}
-            placeholder="••••••••"
-            placeholderTextColor="#b0bec5"
-            onChangeText={(v) => handleChange('confirm', v)}
-            secureTextEntry={!showConfirm}
-          />
+<TextInput
+  style={styles.input}
+  placeholder="••••••••"
+  placeholderTextColor="#b0bec5"
+  onChangeText={(v) => handleChange('confirm', v)}
+  secureTextEntry={!showConfirm}
+  autoCapitalize="none"
+  autoCorrect={false}
+  textContentType="oneTimeCode"
+/>
           <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
             <Ionicons
               name={showConfirm ? 'eye-off-outline' : 'eye-outline'}

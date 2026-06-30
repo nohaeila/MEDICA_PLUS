@@ -43,6 +43,7 @@ model Patient {
   rdvs          RDV[]
   ordonnances   Ordonnance[]
   dossier       Dossier?
+  medecinTraitant String @default("")
 }
 
 model RDV {
@@ -72,6 +73,7 @@ model Dossier {
   patientId  String   @unique
   patient    Patient  @relation(fields: [patientId], references: [id])
   antecedents String  @default("")
+  antecedentsChirurgicaux String  @default("")
   allergies   String  @default("")
   notes       String  @default("")
   createdAt  DateTime @default(now())
