@@ -41,4 +41,34 @@ const getPatientsMedecin = async (req, res) => {
   }
 }
 
-module.exports = { getMedecins, getMedecinById, getPatientsMedecin }
+// GET /api/medecins/profil
+const getMonProfil = async (req, res) => {
+  try {
+    const { id: userId } = req.user
+    const medecin = await prisma.medecin.findUnique({
+      where: { userId },
+      include: { user: { select: { email: true } } }
+    })
+    if (!medecin) return res.status(404).json({ message: "Profil introuvable" })
+    res.json(medecin)
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error })
+  }
+}
+
+// PUT /api/medecins/profil
+const updateMonProfil = async (req, res) => {
+  try {
+    const { id: userId } = req.user
+    const { telephone, specialite } = req.body
+    const medecin = await prisma.medecin.update({
+      where: { userId },
+      data: { telephone, specialite }
+    })
+    res.json(medecin)
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error })
+  }
+}
+
+module.exports = { getMedecins, getMedecinById, getPatientsMedecin, getMonProfil, updateMonProfil }

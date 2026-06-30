@@ -46,6 +46,7 @@ model Patient {
   rendezvous  RendezVous[]
   ordonnances Ordonnance[]
   rapports    Rapport[]
+  dossier     Dossier?
 }
 
 model RendezVous {
@@ -98,4 +99,14 @@ model Rapport {
   medecin   Medecin  @relation(fields: [medecinId], references: [id])
   patient   Patient  @relation(fields: [patientId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model Dossier {
+  id                       Int      @id @default(autoincrement())
+  antecedents              String?
+  antecedentsChirurgicaux  String?
+  allergies                String?
+  patientId                Int      @unique
+  patient                  Patient  @relation(fields: [patientId], references: [id])
+  createdAt                DateTime @default(now())
 }

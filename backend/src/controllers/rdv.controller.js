@@ -3,10 +3,20 @@ const prisma = new PrismaClient()
 
 const getRDV = async (req, res) => {
   try {
-    const { medecinId } = req.params
+    const { id: userId, role } = req.user
+    let where = {}
+    if (role === "MEDECIN") {
+      const medecin = await prisma.medecin.findUnique({ where: { userId } })
+      if (!medecin) return res.status(404).json({ message: "Médecin introuvable" })
+      where = { medecinId: medecin.id }
+    } else if (role === "PATIENT") {
+      const patient = await prisma.patient.findUnique({ where: { userId } })
+      if (!patient) return res.status(404).json({ message: "Patient introuvable" })
+      where = { patientId: patient.id }
+    }
     const rdv = await prisma.rendezVous.findMany({
-      where: { medecinId: parseInt(medecinId) },
-      include: { patient: true }
+      where,
+      include: { patient: true, medecin: true }
     })
     res.json(rdv)
   } catch (error) {
