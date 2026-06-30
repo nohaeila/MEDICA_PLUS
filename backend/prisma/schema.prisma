@@ -54,7 +54,7 @@ model RendezVous {
   date      DateTime
   heure     String
   motif     String
-  statut    Statut   @default(EN_ATTENTE)
+  statut    Statut   @default(PLANIFIE)
   medecinId Int
   patientId Int
   medecin   Medecin  @relation(fields: [medecinId], references: [id])
@@ -63,10 +63,9 @@ model RendezVous {
 }
 
 enum Statut {
-  CONFIRME
-  EN_ATTENTE
+  PLANIFIE
+  TERMINE
   ANNULE
-  URGENT
 }
 
 model Notification {

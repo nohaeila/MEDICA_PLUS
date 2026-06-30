@@ -17,6 +17,7 @@ const rdvRoutes = require("./routes/rdv.routes")
 const notificationRoutes = require("./routes/notification.routes")
 const ordonnanceRoutes = require("./routes/ordonnance.routes")
 const rapportRoutes = require("./routes/rapport.routes")
+const dossierRoutes = require("./routes/dossier.routes")
 
 app.use("/api/auth", authRoutes)
 app.use("/api/medecins", medecinRoutes)
@@ -24,6 +25,7 @@ app.use("/api/rdv", rdvRoutes)
 app.use("/api/notifications", notificationRoutes)
 app.use("/api/ordonnances", ordonnanceRoutes)
 app.use("/api/rapports", rapportRoutes)
+app.use("/api/dossier", dossierRoutes)
 
 // Test route
 app.get("/", (req, res) => {
