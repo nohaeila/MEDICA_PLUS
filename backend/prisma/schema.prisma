@@ -64,6 +64,7 @@ model RendezVous {
 
 enum Statut {
   PLANIFIE
+  CONFIRME
   TERMINE
   ANNULE
 }
