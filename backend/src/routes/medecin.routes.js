@@ -9,7 +9,7 @@ const {
   updateMonProfil
 } = require("../controllers/medecin.controller")
 
-const verifyToken = require("../middleware/auth.middleware.js")
+const { verifyToken } = require("../controllers/auth.middleware")
 
 router.get("/profil", verifyToken, getMonProfil)
 router.put("/profil", verifyToken, updateMonProfil)

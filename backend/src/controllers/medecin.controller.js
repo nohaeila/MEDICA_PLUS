@@ -41,7 +41,6 @@ const getPatientsMedecin = async (req, res) => {
   }
 }
 
-// GET /api/medecins/profil
 const getMonProfil = async (req, res) => {
   try {
     const { id: userId } = req.user
@@ -56,14 +55,14 @@ const getMonProfil = async (req, res) => {
   }
 }
 
-// PUT /api/medecins/profil
 const updateMonProfil = async (req, res) => {
   try {
     const { id: userId } = req.user
-    const { telephone, specialite } = req.body
+    const { telephone, specialite, ville } = req.body
     const medecin = await prisma.medecin.update({
       where: { userId },
-      data: { telephone, specialite }
+      data: { telephone, specialite, ville },
+      include: { user: { select: { email: true } } }
     })
     res.json(medecin)
   } catch (error) {

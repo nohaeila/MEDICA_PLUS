@@ -6,44 +6,43 @@ const getDossierPatient = async (req, res) => {
   try {
     const { patientId } = req.params
 
-    // Vérifie qu'un RDV existe entre le médecin connecté et ce patient
-    const rdv = await prisma.rDV.findFirst({
+    const medecin = await prisma.medecin.findUnique({
+      where: { userId: req.user.id }
+    })
+    if (!medecin) {
+      return res.status(404).json({ message: "Médecin introuvable" })
+    }
+
+    const rdv = await prisma.rendezVous.findFirst({
       where: {
         patientId: parseInt(patientId),
-        medecinId: req.user.id
+        medecinId: medecin.id
       }
     })
-
     if (!rdv) {
-      return res.status(403).json({
-        message: "Accès refusé : aucun RDV avec ce patient"
-      })
+      return res.status(403).json({ message: "Accès refusé : aucun RDV avec ce patient" })
     }
 
-    // Récupération du dossier réel
-    const dossier = await prisma.dossier.findUnique({
-      where: {
-        patientId: parseInt(patientId)
-      },
+    const patient = await prisma.patient.findUnique({
+      where: { id: parseInt(patientId) },
       include: {
-        patient: true
+        ordonnances: { orderBy: { createdAt: "desc" } },
+        rapports: { orderBy: { createdAt: "desc" } },
+        rendezvous: {
+          where: { medecinId: medecin.id },
+          orderBy: { date: "asc" }
+        },
+        dossier: true
       }
     })
-
-    if (!dossier) {
-      return res.status(404).json({
-        message: "Dossier introuvable"
-      })
+    if (!patient) {
+      return res.status(404).json({ message: "Patient introuvable" })
     }
 
-    res.json(dossier)
-
+    res.json(patient)
   } catch (error) {
     console.error(error)
-
-    res.status(500).json({
-      message: "Erreur serveur"
-    })
+    res.status(500).json({ message: "Erreur serveur" })
   }
 }
 
@@ -53,52 +52,56 @@ const updateNotesDossier = async (req, res) => {
     const { patientId } = req.params
     const { notes } = req.body
 
-    // Vérifie rôle médecin
     if (req.user.role !== "MEDECIN") {
-      return res.status(403).json({
-        message: "Accès refusé"
-      })
+      return res.status(403).json({ message: "Accès refusé" })
     }
 
-    // Vérifie relation médecin-patient via RDV
-    const rdv = await prisma.rDV.findFirst({
+    const medecin = await prisma.medecin.findUnique({
+      where: { userId: req.user.id }
+    })
+    if (!medecin) {
+      return res.status(404).json({ message: "Médecin introuvable" })
+    }
+
+    const rdv = await prisma.rendezVous.findFirst({
       where: {
         patientId: parseInt(patientId),
-        medecinId: req.user.id
+        medecinId: medecin.id
+      }
+    })
+    if (!rdv) {
+      return res.status(403).json({ message: "Aucun RDV avec ce patient" })
+    }
+
+    // Cherche un rapport existant, sinon en crée un
+    const rapportExistant = await prisma.rapport.findFirst({
+      where: {
+        patientId: parseInt(patientId),
+        medecinId: medecin.id
       }
     })
 
-    if (!rdv) {
-      return res.status(403).json({
-        message: "Aucun RDV avec ce patient"
+    let rapport
+    if (rapportExistant) {
+      rapport = await prisma.rapport.update({
+        where: { id: rapportExistant.id },
+        data: { contenu: notes }
+      })
+    } else {
+      rapport = await prisma.rapport.create({
+        data: {
+          contenu: notes,
+          medecinId: medecin.id,
+          patientId: parseInt(patientId)
+        }
       })
     }
 
-    // Mise à jour des notes
-    const dossier = await prisma.dossier.update({
-      where: {
-        patientId: parseInt(patientId)
-      },
-      data: {
-        notes
-      }
-    })
-
-    res.json({
-      message: "Notes mises à jour",
-      dossier
-    })
-
+    res.json({ message: "Notes mises à jour", rapport })
   } catch (error) {
     console.error(error)
-
-    res.status(500).json({
-      message: "Erreur serveur"
-    })
+    res.status(500).json({ message: "Erreur serveur" })
   }
 }
 
-module.exports = {
-  getDossierPatient,
-  updateNotesDossier
-}
+module.exports = { getDossierPatient, updateNotesDossier }
