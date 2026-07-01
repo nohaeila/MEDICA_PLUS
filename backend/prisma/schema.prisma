@@ -3,111 +3,102 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   email     String   @unique
   password  String
-  role      Role     @default(PATIENT)
+  role      String
   createdAt DateTime @default(now())
   medecin   Medecin?
   patient   Patient?
 }
 
-enum Role {
-  MEDECIN
-  PATIENT
-}
-
 model Medecin {
-  id          Int          @id @default(autoincrement())
-  nom         String
-  prenom      String
-  specialite  String
-  ville       String
-  userId      Int          @unique
+  id          String       @id @default(uuid())
+  userId      String       @unique
   user        User         @relation(fields: [userId], references: [id])
-  rendezvous  RendezVous[]
+  prenom      String
+  nom         String
+  telephone   String
+  specialite  String
+  rpps        String       @unique
+  adresse     String       @default("")
+  createdAt   DateTime     @default(now())
+  rdvs        RDV[]
   ordonnances Ordonnance[]
   rapports    Rapport[]
-  telephone String?
 }
 
 model Patient {
-  id          Int          @id @default(autoincrement())
-  nom         String
-  prenom      String
-  nss         String
-  userId      Int          @unique
-  user        User         @relation(fields: [userId], references: [id])
-  rendezvous  RendezVous[]
-  ordonnances Ordonnance[]
-  rapports    Rapport[]
-  dossier     Dossier?
+  id              String       @id @default(uuid())
+  userId          String       @unique
+  user            User         @relation(fields: [userId], references: [id])
+  prenom          String
+  nom             String
+  telephone       String
+  dateNaissance   String
+  nss             String       @unique
+  medecinTraitant String       @default("")
+  createdAt       DateTime     @default(now())
+  rdvs            RDV[]
+  ordonnances     Ordonnance[]
+  dossier         Dossier?
+  rapports        Rapport[]
 }
 
-model RendezVous {
-  id        Int      @id @default(autoincrement())
-  date      DateTime
-  heure     String
-  motif     String
-  statut    Statut   @default(PLANIFIE)
-  medecinId Int
-  patientId Int
+model RDV {
+  id        String   @id @default(uuid())
+  medecinId String
+  patientId String
   medecin   Medecin  @relation(fields: [medecinId], references: [id])
   patient   Patient  @relation(fields: [patientId], references: [id])
-  createdAt DateTime @default(now())
-}
-
-enum Statut {
-  PLANIFIE
-  CONFIRME
-  TERMINE
-  ANNULE
-}
-
-model Notification {
-  id        Int      @id @default(autoincrement())
-  titre     String
-  message   String
-  lu        Boolean  @default(false)
-  userId    Int
+  date      String
+  heure     String
+  motif     String
+  statut    String   @default("en_attente")
   createdAt DateTime @default(now())
 }
 
 model Ordonnance {
-  id         Int      @id @default(autoincrement())
-  medicament String
-  posologie  String
-  duree      String
-  notes      String?
-  medecinId  Int
-  patientId  Int
-  medecin    Medecin  @relation(fields: [medecinId], references: [id])
-  patient    Patient  @relation(fields: [patientId], references: [id])
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  patientId String
+  medecinId String
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  medecin   Medecin  @relation(fields: [medecinId], references: [id])
+  contenu   String
+  date      String
+  createdAt DateTime @default(now())
 }
 
 model Rapport {
-  id        Int      @id @default(autoincrement())
-  contenu   String
-  medecinId Int
-  patientId Int
-  medecin   Medecin  @relation(fields: [medecinId], references: [id])
+  id        String   @id @default(uuid())
+  patientId String
+  medecinId String
   patient   Patient  @relation(fields: [patientId], references: [id])
+  medecin   Medecin  @relation(fields: [medecinId], references: [id])
+  contenu   String
   createdAt DateTime @default(now())
 }
 
 model Dossier {
-  id                       Int      @id @default(autoincrement())
-  antecedents              String?
-  antecedentsChirurgicaux  String?
-  allergies                String?
-  patientId                Int      @unique
-  patient                  Patient  @relation(fields: [patientId], references: [id])
-  createdAt                DateTime @default(now())
+  id                      String   @id @default(uuid())
+  patientId               String   @unique
+  patient                 Patient  @relation(fields: [patientId], references: [id])
+  antecedents             String   @default("")
+  antecedentsChirurgicaux String   @default("")
+  allergies               String   @default("")
+  notes                   String   @default("")
+  createdAt               DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  lu        Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

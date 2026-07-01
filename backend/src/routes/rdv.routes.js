@@ -1,11 +1,14 @@
-const express = require("express")
-const router = express.Router()
-const { getRDV, createRDV, updateRDV, deleteRDV } = require("../controllers/rdv.controller")
-const authMiddleware = require("../middleware/auth.middleware")
+const express = require('express');
+const router = express.Router();
+const authMiddleware = require('../middleware/auth.middleware');
+const { createRdv, getRdvs, deleteRdv, updateRdv, getHorairesPris } = require('../controllers/rdv.controller');
 
-router.get("/", authMiddleware, getRDV)
-router.post("/", authMiddleware, createRDV)
-router.put("/:id", authMiddleware, updateRDV)
-router.delete("/:id", authMiddleware, deleteRDV)
+router.use(authMiddleware);
 
-module.exports = router
+router.post('/', createRdv);
+router.get('/', getRdvs);
+router.delete('/:id', deleteRdv);
+router.put('/:id', updateRdv);
+router.get('/horaires-pris', getHorairesPris);
+
+module.exports = router;

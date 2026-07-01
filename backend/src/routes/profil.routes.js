@@ -1,10 +1,12 @@
+// profil.routes.js
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth.middleware');
-const { getRapports, createRapport } = require('../controllers/rapport.controller');
+const { getProfil, updateProfil } = require('../controllers/profil.controller');
 
 router.use(authMiddleware);
-router.get('/:patientId', getRapports);
-router.post('/', createRapport);
+
+router.get('/', getProfil);
+router.put('/', updateProfil);
 
 module.exports = router;

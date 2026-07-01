@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth.middleware');
-const { getRapports, createRapport } = require('../controllers/rapport.controller');
+const { getOrdonnances, createOrdonnance } = require('../controllers/ordonnances.controller');
 
 router.use(authMiddleware);
-router.get('/:patientId', getRapports);
-router.post('/', createRapport);
+router.get('/', getOrdonnances);
+router.post('/', createOrdonnance);
 
 module.exports = router;

@@ -1,202 +1,168 @@
-const { PrismaClient } = require("@prisma/client")
-const prisma = new PrismaClient()
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const { createNotification } = require('./notifications.controller');
 
-// GET RDV
-const getRDV = async (req, res) => {
+// Créer un RDV
+const createRdv = async (req, res) => {
   try {
-    const { id: userId, role } = req.user
+    const { medecinId, date, heure, motif } = req.body;
+    const userId = req.user.userId;
 
-    let where = {}
-
-    // RDV médecin
-    if (role === "MEDECIN") {
-
-      const medecin = await prisma.medecin.findUnique({
-        where: { userId }
-      })
-
-      if (!medecin) {
-        return res.status(404).json({
-          message: "Médecin introuvable"
-        })
-      }
-
-      where = {
-        medecinId: medecin.id
-      }
-    }
-
-    // RDV patient
-    else if (role === "PATIENT") {
-
-      const patient = await prisma.patient.findUnique({
-        where: { userId }
-      })
-
-      if (!patient) {
-        return res.status(404).json({
-          message: "Patient introuvable"
-        })
-      }
-
-      where = {
-        patientId: patient.id
-      }
-    }
-
-    const rdv = await prisma.rendezVous.findMany({
-      where,
-      include: {
-        patient: true,
-        medecin: true
-      },
-      orderBy: {
-        date: "asc"
-      }
-    })
-
-    res.json(rdv)
-
-  } catch (error) {
-
-    console.error(error)
-
-    res.status(500).json({
-      message: "Erreur serveur"
-    })
-  }
-}
-
-// CREATE RDV
-const createRDV = async (req, res) => {
-  try {
-
-    const {
-      date,
-      heure,
-      motif,
-      medecinId
-    } = req.body
-
-    // Vérifie patient connecté
-    if (req.user.role !== "PATIENT") {
-      return res.status(403).json({
-        message: "Seul un patient peut réserver"
-      })
-    }
-
-    // Récupère vrai patient depuis token
-    const patient = await prisma.patient.findUnique({
-      where: {
-        userId: req.user.id
-      }
-    })
-
+    const patient = await prisma.patient.findUnique({ where: { userId } });
     if (!patient) {
-      return res.status(404).json({
-        message: "Patient introuvable"
-      })
+      return res.status(404).json({ error: 'Patient non trouvé' });
     }
 
-    // Vérifie créneau déjà réservé
-    const existingRDV = await prisma.rendezVous.findFirst({
-      where: {
-        medecinId: parseInt(medecinId),
-        date: new Date(date),
-        heure,
-        statut: {
-          in: ["PLANIFIE"]
-        }
-      }
-    })
-
-    if (existingRDV) {
-      return res.status(400).json({
-        message: "Créneau déjà réservé"
-      })
+    const medecin = await prisma.medecin.findUnique({ where: { id: medecinId } });
+    if (!medecin) {
+      return res.status(404).json({ error: 'Médecin non trouvé' });
     }
 
-    // Création RDV
-    const rdv = await prisma.rendezVous.create({
+    const rdv = await prisma.rDV.create({
       data: {
-        date: new Date(date),
+        medecinId: medecin.id,
+        patientId: patient.id,
+        date,
         heure,
-        motif,
-        statut: "PLANIFIE",
-        medecinId: parseInt(medecinId),
-        patientId: patient.id
+        motif: motif || 'Consultation',
+        statut: 'confirme'
       }
-    })
+    });
 
-    res.status(201).json(rdv)
+    await createNotification(
+      userId,
+      `Votre RDV avec Dr. ${medecin.prenom} ${medecin.nom} le ${date} a ${heure} est confirme.`
+    );
 
+    await createNotification(
+      medecin.userId,
+      `Nouveau RDV : ${patient.prenom} ${patient.nom} le ${date} a ${heure}.`
+    );
+
+    return res.status(201).json({ message: 'RDV créé avec succès', rdv });
   } catch (error) {
-
-    console.error(error)
-
-    res.status(500).json({
-      message: "Erreur serveur"
-    })
+    console.error(error);
+    return res.status(500).json({ error: 'Erreur serveur' });
   }
-}
+};
 
-// UPDATE RDV
-const updateRDV = async (req, res) => {
+// Lister les RDV (patient OU médecin selon le rôle)
+const getRdvs = async (req, res) => {
   try {
+    const userId = req.user.userId;
+    const role = req.user.role;
 
-    const { id } = req.params
-    const { statut } = req.body
+    let rdvs;
 
-    const rdv = await prisma.rendezVous.update({
-      where: {
-        id: parseInt(id)
-      },
-      data: {
-        statut
-      }
-    })
+    if (role === 'patient') {
+      const patient = await prisma.patient.findUnique({ where: { userId } });
+      if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
 
-    res.json(rdv)
+      rdvs = await prisma.rDV.findMany({
+        where: { patientId: patient.id },
+        include: { medecin: true, patient: true },
+        orderBy: { date: 'asc' }
+      });
+    } else if (role === 'medecin') {
+      const medecin = await prisma.medecin.findUnique({ where: { userId } });
+      if (!medecin) return res.status(404).json({ error: 'Médecin non trouvé' });
 
+      rdvs = await prisma.rDV.findMany({
+        where: { medecinId: medecin.id },
+        include: { medecin: true, patient: true },
+        orderBy: { date: 'asc' }
+      });
+    } else {
+      return res.status(403).json({ error: 'Rôle non autorisé' });
+    }
+
+    return res.status(200).json(rdvs);
   } catch (error) {
-
-    console.error(error)
-
-    res.status(500).json({
-      message: "Erreur serveur"
-    })
+    console.error(error);
+    return res.status(500).json({ error: 'Erreur serveur' });
   }
-}
+};
 
-// DELETE RDV
-const deleteRDV = async (req, res) => {
+// Supprimer un RDV
+const deleteRdv = async (req, res) => {
   try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    const role = req.user.role;
 
-    const { id } = req.params
+    const rdv = await prisma.rDV.findUnique({ where: { id } });
+    if (!rdv) return res.status(404).json({ error: 'RDV non trouvé' });
 
-    await prisma.rendezVous.delete({
-      where: {
-        id: parseInt(id)
+    if (role === 'patient') {
+      const patient = await prisma.patient.findUnique({ where: { userId } });
+      if (!patient || rdv.patientId !== patient.id) {
+        return res.status(403).json({ error: 'Non autorisé' });
       }
-    })
+    } else if (role === 'medecin') {
+      const medecin = await prisma.medecin.findUnique({ where: { userId } });
+      if (!medecin || rdv.medecinId !== medecin.id) {
+        return res.status(403).json({ error: 'Non autorisé' });
+      }
+    }
 
-    res.json({
-      message: "RDV supprimé"
-    })
-
+    await prisma.rDV.delete({ where: { id } });
+    return res.status(200).json({ message: 'RDV supprimé' });
   } catch (error) {
-
-    console.error(error)
-
-    res.status(500).json({
-      message: "Erreur serveur"
-    })
+    console.error(error);
+    return res.status(500).json({ error: 'Erreur serveur' });
   }
-}
+};
 
-module.exports = {
-  getRDV,
-  createRDV,
-  updateRDV,
-  deleteRDV
-}
+// Modifier un RDV (le médecin peut changer le statut, le patient la date/heure)
+const updateRdv = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { date, heure, motif, statut } = req.body;
+    const userId = req.user.userId;
+    const role = req.user.role;
+
+    const rdv = await prisma.rDV.findUnique({ where: { id } });
+    if (!rdv) return res.status(404).json({ error: 'RDV non trouvé' });
+
+    let updateData = {};
+
+    if (role === 'patient') {
+      const patient = await prisma.patient.findUnique({ where: { userId } });
+      if (!patient || rdv.patientId !== patient.id) {
+        return res.status(403).json({ error: 'Non autorisé' });
+      }
+      updateData = { date, heure, motif };
+    } else if (role === 'medecin') {
+      const medecin = await prisma.medecin.findUnique({ where: { userId } });
+      if (!medecin || rdv.medecinId !== medecin.id) {
+        return res.status(403).json({ error: 'Non autorisé' });
+      }
+      updateData = { statut };
+    }
+
+    const updated = await prisma.rDV.update({
+      where: { id },
+      data: updateData
+    });
+
+    return res.status(200).json({ message: 'RDV modifié', rdv: updated });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+// Horaires pris
+const getHorairesPris = async (req, res) => {
+  try {
+    const { medecinId, date } = req.query;
+    const rdvs = await prisma.rDV.findMany({ where: { medecinId, date } });
+    const heures = rdvs.map(r => r.heure);
+    return res.status(200).json(heures);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+module.exports = { createRdv, getRdvs, deleteRdv, updateRdv, getHorairesPris };

@@ -1,46 +1,74 @@
-const { PrismaClient } = require("@prisma/client")
-const prisma = new PrismaClient()
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
-// GET /api/ordonnances/:patientId
+// GET — patient voit ses ordonnances
 const getOrdonnances = async (req, res) => {
   try {
-    const { patientId } = req.params
-    const ordonnances = await prisma.ordonnance.findMany({
-      where: { patientId: parseInt(patientId) },
-      orderBy: { createdAt: "desc" }
-    })
-    res.json(ordonnances)
-  } catch (error) {
-    res.status(500).json({ message: "Erreur serveur", error })
-  }
-}
+    const userId = req.user.userId;
+    const role = req.user.role;
 
-// POST /api/ordonnances
-const createOrdonnance = async (req, res) => {
-  try {
-    if (req.user.role !== "MEDECIN") {
-      return res.status(403).json({ message: "Accès refusé" })
+    let ordonnances;
+
+    if (role === 'patient') {
+      const patient = await prisma.patient.findUnique({ where: { userId } });
+      if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
+
+      ordonnances = await prisma.ordonnance.findMany({
+        where: { patientId: patient.id },
+        include: { medecin: true },
+        orderBy: { createdAt: 'desc' }
+      });
+    } else if (role === 'medecin') {
+      const medecin = await prisma.medecin.findUnique({ where: { userId } });
+      if (!medecin) return res.status(404).json({ error: 'Médecin non trouvé' });
+
+      const { patientId } = req.query;
+      ordonnances = await prisma.ordonnance.findMany({
+        where: { medecinId: medecin.id, ...(patientId && { patientId }) },
+        include: { patient: true },
+        orderBy: { createdAt: 'desc' }
+      });
     }
 
-    const { id: userId } = req.user
-    const medecin = await prisma.medecin.findUnique({ where: { userId } })
-    if (!medecin) return res.status(404).json({ message: "Médecin introuvable" })
+    return res.status(200).json(ordonnances);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
 
-    const { medicament, posologie, duree, notes, patientId } = req.body
+// POST — médecin crée une ordonnance pour un patient
+const createOrdonnance = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const role = req.user.role;
+
+    if (role !== 'medecin') {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+
+    const medecin = await prisma.medecin.findUnique({ where: { userId } });
+    if (!medecin) return res.status(404).json({ error: 'Médecin non trouvé' });
+
+    const { patientId, contenu, date } = req.body;
+
+    const patient = await prisma.patient.findUnique({ where: { id: patientId } });
+    if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
+
     const ordonnance = await prisma.ordonnance.create({
       data: {
-        medicament,
-        posologie,
-        duree,
-        notes,
+        patientId,
         medecinId: medecin.id,
-        patientId: parseInt(patientId),
+        contenu,
+        date
       }
-    })
-    res.status(201).json(ordonnance)
-  } catch (error) {
-    res.status(500).json({ message: "Erreur serveur", error })
-  }
-}
+    });
 
-module.exports = { getOrdonnances, createOrdonnance }
+    return res.status(201).json({ message: 'Ordonnance créée', ordonnance });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+module.exports = { getOrdonnances, createOrdonnance };

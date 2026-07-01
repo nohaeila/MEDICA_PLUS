@@ -1,107 +1,79 @@
-const { PrismaClient } = require("@prisma/client")
-const prisma = new PrismaClient()
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
-// GET /api/dossier/patient/:patientId
-const getDossierPatient = async (req, res) => {
+const getDossier = async (req, res) => {
   try {
-    const { patientId } = req.params
+    const userId = req.user.userId;
 
-    const medecin = await prisma.medecin.findUnique({
-      where: { userId: req.user.id }
-    })
-    if (!medecin) {
-      return res.status(404).json({ message: "Médecin introuvable" })
-    }
-
-    const rdv = await prisma.rendezVous.findFirst({
-      where: {
-        patientId: parseInt(patientId),
-        medecinId: medecin.id
-      }
-    })
-    if (!rdv) {
-      return res.status(403).json({ message: "Accès refusé : aucun RDV avec ce patient" })
-    }
-
-    const patient = await prisma.patient.findUnique({
-      where: { id: parseInt(patientId) },
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
       include: {
-        ordonnances: { orderBy: { createdAt: "desc" } },
-        rapports: { orderBy: { createdAt: "desc" } },
-        rendezvous: {
-          where: { medecinId: medecin.id },
-          orderBy: { date: "asc" }
-        },
-        dossier: true
-      }
-    })
-    if (!patient) {
-      return res.status(404).json({ message: "Patient introuvable" })
-    }
-
-    res.json(patient)
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: "Erreur serveur" })
-  }
-}
-
-// PUT /api/dossier/patient/:patientId/notes
-const updateNotesDossier = async (req, res) => {
-  try {
-    const { patientId } = req.params
-    const { notes } = req.body
-
-    if (req.user.role !== "MEDECIN") {
-      return res.status(403).json({ message: "Accès refusé" })
-    }
-
-    const medecin = await prisma.medecin.findUnique({
-      where: { userId: req.user.id }
-    })
-    if (!medecin) {
-      return res.status(404).json({ message: "Médecin introuvable" })
-    }
-
-    const rdv = await prisma.rendezVous.findFirst({
-      where: {
-        patientId: parseInt(patientId),
-        medecinId: medecin.id
-      }
-    })
-    if (!rdv) {
-      return res.status(403).json({ message: "Aucun RDV avec ce patient" })
-    }
-
-    // Cherche un rapport existant, sinon en crée un
-    const rapportExistant = await prisma.rapport.findFirst({
-      where: {
-        patientId: parseInt(patientId),
-        medecinId: medecin.id
-      }
-    })
-
-    let rapport
-    if (rapportExistant) {
-      rapport = await prisma.rapport.update({
-        where: { id: rapportExistant.id },
-        data: { contenu: notes }
-      })
-    } else {
-      rapport = await prisma.rapport.create({
-        data: {
-          contenu: notes,
-          medecinId: medecin.id,
-          patientId: parseInt(patientId)
+        patient: {
+          include: { dossier: true }
         }
-      })
+      }
+    });
+
+    if (!user?.patient) {
+      return res.status(404).json({ error: 'Patient non trouvé' });
     }
 
-    res.json({ message: "Notes mises à jour", rapport })
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: "Erreur serveur" })
-  }
-}
+    const patient = user.patient;
 
-module.exports = { getDossierPatient, updateNotesDossier }
+    let dossier = patient.dossier;
+    if (!dossier) {
+      dossier = await prisma.dossier.create({
+        data: { patientId: patient.id }
+      });
+    }
+
+    return res.status(200).json({
+      patient: {
+        prenom: patient.prenom,
+        nom: patient.nom,
+        dateNaissance: patient.dateNaissance,
+        medecinTraitant: patient.medecinTraitant || ''
+      },
+      dossier: {
+        antecedents: dossier.antecedents,
+        antecedentsChirurgicaux: dossier.antecedentsChirurgicaux,
+        allergies: dossier.allergies,
+        notes: dossier.notes
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+const updateDossier = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { antecedents, antecedentsChirurgicaux, allergies } = req.body;
+
+    const patient = await prisma.patient.findUnique({ where: { userId } });
+    if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
+
+    let dossier = await prisma.dossier.findUnique({ where: { patientId: patient.id } });
+    if (!dossier) {
+      dossier = await prisma.dossier.create({ data: { patientId: patient.id } });
+    }
+
+    await prisma.dossier.update({
+      where: { patientId: patient.id },
+      data: {
+        ...(antecedents !== undefined && { antecedents }),
+        ...(antecedentsChirurgicaux !== undefined && { antecedentsChirurgicaux }),
+        ...(allergies !== undefined && { allergies }),
+      }
+    });
+
+    return res.status(200).json({ message: 'Dossier mis à jour' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+module.exports = { getDossier, updateDossier };

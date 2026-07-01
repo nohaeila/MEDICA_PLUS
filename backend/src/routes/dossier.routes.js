@@ -1,9 +1,11 @@
-const express = require("express")
-const router = express.Router()
-const { getDossierPatient, updateNotesDossier } = require("../controllers/dossier.controller")
-const { verifyToken } = require("../controllers/auth.middleware")
+const express = require('express');
+const router = express.Router();
+const authMiddleware = require('../middleware/auth.middleware');
+const { getDossier, updateDossier } = require('../controllers/dossier.controller');
 
-router.get("/patient/:patientId", verifyToken, getDossierPatient)
-router.put("/patient/:patientId/notes", verifyToken, updateNotesDossier)
+router.use(authMiddleware);
 
-module.exports = router
+router.get('/', getDossier);
+router.put('/', updateDossier);
+
+module.exports = router;
