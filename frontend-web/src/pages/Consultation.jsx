@@ -11,24 +11,27 @@ export default function Consultation() {
   const [dossier, setDossier] = useState(null)
   const [ordonnances, setOrdonnances] = useState([])
   const [onglet, setOnglet] = useState("dossier")
-
   const [notesForm, setNotesForm] = useState("")
   const [ordonnanceForm, setOrdonnanceForm] = useState({ contenu: "" })
   const [success, setSuccess] = useState("")
+  const [loading, setLoading] = useState(true)
+
+  const medecinId = localStorage.getItem("userId") || 1
 
   useEffect(() => {
-    api.get(`/rdv/1`).then(res => {
-      const rdvPatient = res.data.filter(r => r.patientId === parseInt(patientId))
+    Promise.all([
+      api.get(`/rdv/${medecinId}`),
+      api.get(`/dossier/patient/${patientId}`).catch(() => ({ data: null })),
+      api.get(`/ordonnances/${patientId}`).catch(() => ({ data: [] }))
+    ]).then(([rdvRes, dossierRes, ordRes]) => {
+      const rdvPatient = rdvRes.data.filter(r => r.patientId === parseInt(patientId))
       setRdvs(rdvPatient)
       if (rdvPatient.length > 0) setPatient(rdvPatient[0].patient)
-    })
-
-    api.get(`/dossier/patient/${patientId}`).then(res => {
-      setDossier(res.data)
-      setNotesForm(res.data?.notes || "")
-    })
-
-    api.get(`/ordonnances/${patientId}`).then(res => setOrdonnances(res.data))
+      setDossier(dossierRes.data)
+      setNotesForm(dossierRes.data?.notes || "")
+      setOrdonnances(ordRes.data)
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [patientId])
 
   const enregistrerNotes = async () => {
@@ -37,9 +40,7 @@ export default function Consultation() {
       setDossier({ ...dossier, notes: notesForm })
       setSuccess("Notes enregistrées avec succès !")
       setTimeout(() => setSuccess(""), 3000)
-    } catch (err) {
-      console.error(err)
-    }
+    } catch (err) { console.error(err) }
   }
 
   const soumettreOrdonnance = async () => {
@@ -47,7 +48,7 @@ export default function Consultation() {
       await api.post("/ordonnances", {
         contenu: ordonnanceForm.contenu,
         date: new Date().toISOString(),
-        medecinId: 1,
+        medecinId: parseInt(medecinId),
         patientId: parseInt(patientId)
       })
       setSuccess("Ordonnance créée avec succès !")
@@ -55,9 +56,7 @@ export default function Consultation() {
       const res = await api.get(`/ordonnances/${patientId}`)
       setOrdonnances(res.data)
       setTimeout(() => setSuccess(""), 3000)
-    } catch (err) {
-      console.error(err)
-    }
+    } catch (err) { console.error(err) }
   }
 
   const statutStyle = {
@@ -71,6 +70,15 @@ export default function Consultation() {
     "CONFIRME": "Confirmé", "EN_ATTENTE": "En attente",
     "ANNULE": "Annulé", "URGENT": "Urgent"
   }
+
+  if (loading) return (
+    <div className="flex min-h-screen" style={{ background: "#f0f4ff" }}>
+      <Sidebar active="Mes patients" />
+      <main className="flex-1 p-8 flex items-center justify-center">
+        <p style={{ color: "#6b7280" }}>Chargement...</p>
+      </main>
+    </div>
+  )
 
   return (
     <div className="flex min-h-screen" style={{ background: "#f0f4ff" }}>
@@ -87,11 +95,13 @@ export default function Consultation() {
           {patient && (
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                style={{ background: "#4f8ef7" }}>
-                {patient.prenom[0]}{patient.nom[0]}
+                style={{ background: "#4f8ef7", borderRadius: "50%" }}>
+                {patient.prenom?.[0]}{patient.nom?.[0]}
               </div>
               <div>
-                <h2 className="text-xl font-bold" style={{ color: "#1e293b" }}>{patient.prenom} {patient.nom}</h2>
+                <h2 className="text-xl font-bold" style={{ color: "#1e293b" }}>
+                  {patient.prenom} {patient.nom}
+                </h2>
                 <p className="text-xs" style={{ color: "#6b7280" }}>NSS : {patient.nss}</p>
               </div>
             </div>
@@ -99,7 +109,8 @@ export default function Consultation() {
         </div>
 
         {success && (
-          <div className="text-sm px-4 py-3 mb-4" style={{ background: "#dcfce7", color: "#15803d", borderRadius: 12 }}>
+          <div className="text-sm px-4 py-3 mb-4"
+            style={{ background: "#dcfce7", color: "#15803d", borderRadius: 12 }}>
             {success}
           </div>
         )}
@@ -124,37 +135,47 @@ export default function Consultation() {
           ))}
         </div>
 
-        {/* Onglet Dossier (lecture seule) */}
+        {/* Dossier — lecture seule */}
         {onglet === "dossier" && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
 
-            <div className="p-6" style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <h3 className="text-base font-semibold mb-4" style={{ color: "#1e293b" }}>Antécédents</h3>
-              <p className="text-sm" style={{ color: dossier?.antecedents ? "#1e293b" : "#94a3b8" }}>
-                {dossier?.antecedents || "Aucun antécédent renseigné par le patient"}
-              </p>
-            </div>
+            {[
+              { label: "Antécédents", value: dossier?.antecedents, placeholder: "Aucun antécédent renseigné par le patient" },
+              { label: "Antécédents chirurgicaux", value: dossier?.antecedentsChirurgicaux, placeholder: "Aucun antécédent chirurgical renseigné" },
+              { label: "Allergies", value: dossier?.allergies, placeholder: "Aucune allergie renseignée" },
+            ].map((item, i) => (
+              <div key={i} className="p-6"
+                style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <h3 className="text-sm font-semibold" style={{ color: "#1e293b" }}>{item.label}</h3>
+                  <span className="text-xs px-2 py-0.5"
+                    style={{ background: "#f0f4ff", color: "#6b7280", borderRadius: 6 }}>
+                    Lecture seule
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: item.value ? "#1e293b" : "#94a3b8" }}>
+                  {item.value || item.placeholder}
+                </p>
+              </div>
+            ))}
 
-            <div className="p-6" style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <h3 className="text-base font-semibold mb-4" style={{ color: "#1e293b" }}>Antécédents chirurgicaux</h3>
-              <p className="text-sm" style={{ color: dossier?.antecedentsChirurgicaux ? "#1e293b" : "#94a3b8" }}>
-                {dossier?.antecedentsChirurgicaux || "Aucun antécédent chirurgical renseigné"}
-              </p>
-            </div>
+            {/* Notes médecin */}
+            {dossier?.notes && (
+              <div className="p-6"
+                style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <h3 className="text-sm font-semibold mb-3" style={{ color: "#1e293b" }}>Notes du médecin</h3>
+                <p className="text-sm" style={{ color: "#1e293b" }}>{dossier.notes}</p>
+              </div>
+            )}
 
-            <div className="p-6" style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <h3 className="text-base font-semibold mb-4" style={{ color: "#1e293b" }}>Allergies</h3>
-              <p className="text-sm" style={{ color: dossier?.allergies ? "#1e293b" : "#94a3b8" }}>
-                {dossier?.allergies || "Aucune allergie renseignée"}
-              </p>
-            </div>
-
-            <div className="p-6" style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <h3 className="text-base font-semibold mb-4" style={{ color: "#1e293b" }}>Rendez-vous</h3>
+            {/* RDV */}
+            <div className="p-6"
+              style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <h3 className="text-sm font-semibold mb-4" style={{ color: "#1e293b" }}>Rendez-vous</h3>
               {rdvs.length === 0 ? (
                 <p className="text-sm" style={{ color: "#94a3b8" }}>Aucun rendez-vous</p>
               ) : (
-                <div className="flex flex-col" style={{ gap: 0 }}>
+                <div className="flex flex-col">
                   {rdvs.map((r, i) => (
                     <div key={i} className="flex items-center gap-4 py-3"
                       style={{ borderBottom: i < rdvs.length - 1 ? "1px solid #e2e8f0" : "none" }}>
@@ -178,19 +199,19 @@ export default function Consultation() {
               )}
             </div>
 
-            <div className="p-6" style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <h3 className="text-base font-semibold mb-4" style={{ color: "#1e293b" }}>Ordonnances</h3>
+            {/* Ordonnances */}
+            <div className="p-6"
+              style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <h3 className="text-sm font-semibold mb-4" style={{ color: "#1e293b" }}>Ordonnances</h3>
               {ordonnances.length === 0 ? (
                 <p className="text-sm" style={{ color: "#94a3b8" }}>Aucune ordonnance</p>
               ) : (
                 <div className="flex flex-col gap-3">
                   {ordonnances.map((o, i) => (
                     <div key={i} className="px-4 py-3" style={{ background: "#f0f4ff", borderRadius: 12 }}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs" style={{ color: "#6b7280" }}>
-                          {new Date(o.date).toLocaleDateString("fr-FR")}
-                        </span>
-                      </div>
+                      <p className="text-xs mb-1" style={{ color: "#6b7280" }}>
+                        {new Date(o.date || o.createdAt).toLocaleDateString("fr-FR")}
+                      </p>
                       <p className="text-sm" style={{ color: "#1e293b" }}>{o.contenu}</p>
                     </div>
                   ))}
@@ -200,12 +221,15 @@ export default function Consultation() {
           </div>
         )}
 
-        {/* Onglet Notes du médecin (seul champ modifiable) */}
+        {/* Notes médecin — modifiable */}
         {onglet === "notes" && (
-          <div className="p-6 max-w-2xl" style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-            <h3 className="text-base font-semibold mb-2" style={{ color: "#1e293b" }}>Notes / compte-rendu du médecin</h3>
+          <div className="p-6 max-w-2xl"
+            style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <h3 className="text-base font-semibold mb-1" style={{ color: "#1e293b" }}>
+              Notes / compte-rendu
+            </h3>
             <p className="text-xs mb-6" style={{ color: "#6b7280" }}>
-              Visible par le patient dans son dossier médical (lecture seule pour lui)
+              Visible par le patient dans son dossier (lecture seule pour lui)
             </p>
             <textarea value={notesForm}
               onChange={e => setNotesForm(e.target.value)}
@@ -221,10 +245,13 @@ export default function Consultation() {
           </div>
         )}
 
-        {/* Onglet Ordonnance */}
+        {/* Ordonnance */}
         {onglet === "ordonnance" && (
-          <div className="p-6 max-w-2xl" style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-            <h3 className="text-base font-semibold mb-6" style={{ color: "#1e293b" }}>Rédiger une ordonnance</h3>
+          <div className="p-6 max-w-2xl"
+            style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <h3 className="text-base font-semibold mb-6" style={{ color: "#1e293b" }}>
+              Rédiger une ordonnance
+            </h3>
             <textarea value={ordonnanceForm.contenu}
               onChange={e => setOrdonnanceForm({ contenu: e.target.value })}
               placeholder="Médicament, posologie, durée du traitement, instructions..."
