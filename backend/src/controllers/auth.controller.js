@@ -158,4 +158,37 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const resetPassword = async (req, res) => {
+  try {
+    const { email, nss, newPassword } = req.body;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || user.role !== 'patient') {
+      return res.status(404).json({ error: 'Aucun compte trouvé avec ces informations' });
+    }
+
+    const patient = await prisma.patient.findUnique({ where: { userId: user.id } });
+    if (!patient || patient.nss !== nss) {
+      return res.status(400).json({ error: 'Informations incorrectes' });
+    }
+
+    const passwordErrors = validatePassword(newPassword);
+    if (passwordErrors.length > 0) {
+      return res.status(400).json({ error: 'Mot de passe invalide', details: passwordErrors });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashed }
+    });
+
+    return res.status(200).json({ message: 'Mot de passe réinitialisé avec succès' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+
+module.exports = { register, login, resetPassword };

@@ -14,6 +14,8 @@ import Dossier from '../screens/patient/Dossier';
 import Profil from '../screens/patient/Profil';
 import ProfilMedecin from '../screens/patient/ProfilMedecin';
 import SanteProfil from '../screens/patient/SanteProfil';
+import ResetPassword from '../screens/auth/ResetPassword';
+
 
 
 const Stack = createNativeStackNavigator();
@@ -65,6 +67,7 @@ const AppNavigator = () => {
         <Stack.Screen name="Notifications" component={Notifications} />
         <Stack.Screen name="ProfilMedecin" component={ProfilMedecin} />
         <Stack.Screen name="SanteProfil" component={SanteProfil} />
+        <Stack.Screen name="ResetPassword" component={ResetPassword} />
       </Stack.Navigator>
     </NavigationContainer>
   );

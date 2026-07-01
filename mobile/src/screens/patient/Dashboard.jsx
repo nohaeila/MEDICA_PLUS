@@ -21,9 +21,12 @@ const Dashboard = ({ navigation }) => {
   const [ordonnancesCount, setOrdonnancesCount] = useState(0);
   const conseil = conseils[new Date().getDay() % conseils.length];
 
-  useEffect(() => {
+useEffect(() => {
+  const unsubscribe = navigation.addListener('focus', () => {
     fetchData();
-  }, []);
+  });
+  return unsubscribe;
+}, [navigation]);
 
   const fetchData = async () => {
     try {

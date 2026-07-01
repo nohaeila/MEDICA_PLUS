@@ -11,39 +11,43 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String
-  role      String   // "medecin" ou "patient"
+  role      String
   createdAt DateTime @default(now())
   medecin   Medecin?
   patient   Patient?
 }
 
 model Medecin {
-  id         String   @id @default(uuid())
-  userId     String   @unique
-  user       User     @relation(fields: [userId], references: [id])
-  prenom     String
-  nom        String
-  telephone  String
-  specialite String
-  rpps       String   @unique
-  createdAt  DateTime @default(now())
-  rdvs       RDV[]
+  id          String       @id @default(uuid())
+  userId      String       @unique
+  user        User         @relation(fields: [userId], references: [id])
+  prenom      String
+  nom         String
+  telephone   String
+  specialite  String
+  rpps        String       @unique
+  adresse     String       @default("")
+  createdAt   DateTime     @default(now())
+  rdvs        RDV[]
+  ordonnances Ordonnance[]
+  rapports    Rapport[]
 }
 
 model Patient {
-  id            String   @id @default(uuid())
-  userId        String   @unique
-  user          User     @relation(fields: [userId], references: [id])
-  prenom        String
-  nom           String
-  telephone     String
-  dateNaissance String
-  nss           String   @unique
-  createdAt     DateTime @default(now())
-  rdvs          RDV[]
-  ordonnances   Ordonnance[]
-  dossier       Dossier?
-  medecinTraitant String @default("")
+  id              String       @id @default(uuid())
+  userId          String       @unique
+  user            User         @relation(fields: [userId], references: [id])
+  prenom          String
+  nom             String
+  telephone       String
+  dateNaissance   String
+  nss             String       @unique
+  medecinTraitant String       @default("")
+  createdAt       DateTime     @default(now())
+  rdvs            RDV[]
+  ordonnances     Ordonnance[]
+  dossier         Dossier?
+  rapports        Rapport[]
 }
 
 model RDV {
@@ -62,21 +66,33 @@ model RDV {
 model Ordonnance {
   id        String   @id @default(uuid())
   patientId String
+  medecinId String
   patient   Patient  @relation(fields: [patientId], references: [id])
+  medecin   Medecin  @relation(fields: [medecinId], references: [id])
   contenu   String
   date      String
   createdAt DateTime @default(now())
 }
 
+model Rapport {
+  id        String   @id @default(uuid())
+  patientId String
+  medecinId String
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  medecin   Medecin  @relation(fields: [medecinId], references: [id])
+  contenu   String
+  createdAt DateTime @default(now())
+}
+
 model Dossier {
-  id         String   @id @default(uuid())
-  patientId  String   @unique
-  patient    Patient  @relation(fields: [patientId], references: [id])
-  antecedents String  @default("")
-  antecedentsChirurgicaux String  @default("")
-  allergies   String  @default("")
-  notes       String  @default("")
-  createdAt  DateTime @default(now())
+  id                      String   @id @default(uuid())
+  patientId               String   @unique
+  patient                 Patient  @relation(fields: [patientId], references: [id])
+  antecedents             String   @default("")
+  antecedentsChirurgicaux String   @default("")
+  allergies               String   @default("")
+  notes                   String   @default("")
+  createdAt               DateTime @default(now())
 }
 
 model Notification {

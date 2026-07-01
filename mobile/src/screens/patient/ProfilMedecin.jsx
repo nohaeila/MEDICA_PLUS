@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator
+  StyleSheet, ActivityIndicator, Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../services/api';
@@ -24,6 +24,12 @@ const ProfilMedecin = ({ route, navigation }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openItineraire = () => {
+    if (!medecin?.adresse) return;
+    const adresse = encodeURIComponent(medecin.adresse);
+    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${adresse}`);
   };
 
   return (
@@ -99,6 +105,28 @@ const ProfilMedecin = ({ route, navigation }) => {
 
           </View>
 
+          {/* ADRESSE + ITINÉRAIRE */}
+          {medecin.adresse ? (
+            <>
+              <Text style={styles.sectionLabel}>ADRESSE</Text>
+              <View style={styles.card}>
+                <View style={styles.infoRow}>
+                  <View style={styles.iconBox}>
+                    <Ionicons name="location-outline" size={18} color="#4f8ef7" />
+                  </View>
+                  <View style={styles.infoContent}>
+                    <Text style={styles.infoValue}>{medecin.adresse}</Text>
+                  </View>
+                </View>
+              </View>
+
+              <TouchableOpacity style={styles.itineraireBtn} onPress={openItineraire}>
+                <Ionicons name="navigate-outline" size={18} color="#4f8ef7" style={{ marginRight: 8 }} />
+                <Text style={styles.itineraireBtnText}>VOIR L'ITINÉRAIRE</Text>
+              </TouchableOpacity>
+            </>
+          ) : null}
+
           {/* BOUTON PRENDRE RDV */}
           <TouchableOpacity
             style={styles.rdvBtn}
@@ -164,6 +192,13 @@ const styles = StyleSheet.create({
   infoLabel: { fontSize: 10, color: '#8a99b3', letterSpacing: 2, marginBottom: 4 },
   infoValue: { fontSize: 15, color: '#1a2340', fontWeight: '600' },
   divider: { height: 0.5, backgroundColor: '#e2e8f0', marginVertical: 4 },
+
+  itineraireBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#eef3ff', borderRadius: 12,
+    padding: 14, marginBottom: 16
+  },
+  itineraireBtnText: { color: '#4f8ef7', fontSize: 13, fontWeight: '700' },
 
   rdvBtn: {
     backgroundColor: '#4f8ef7', borderRadius: 14,
