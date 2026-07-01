@@ -10,21 +10,21 @@ export default function GestionRDV() {
   const [filtre, setFiltre] = useState("tous")
 
   const statutStyle = {
+    "PLANIFIE": { background: "#e0ecff", color: "#4f8ef7" },
     "CONFIRME": { background: "#dcfce7", color: "#15803d" },
-    "EN_ATTENTE": { background: "#ffedd5", color: "#c2410c" },
-    "ANNULE": { background: "#f1f5f9", color: "#94a3b8" },
-    "URGENT": { background: "#fee2e2", color: "#dc2626" },
+    "TERMINE": { background: "#f1f5f9", color: "#64748b" },
+    "ANNULE": { background: "#fee2e2", color: "#dc2626" },
   }
 
   const statutLabel = {
+    "PLANIFIE": "Planifié",
     "CONFIRME": "Confirmé",
-    "EN_ATTENTE": "En attente",
+    "TERMINE": "Terminé",
     "ANNULE": "Annulé",
-    "URGENT": "Urgent",
   }
 
   useEffect(() => {
-    api.get("/rdv/1")
+    api.get("/rdv")
       .then(res => { setRdvs(res.data); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
@@ -128,6 +128,11 @@ export default function GestionRDV() {
                       className="text-xs px-3 py-1.5 font-medium transition"
                       style={{ background: "#dcfce7", color: "#15803d", borderRadius: 8 }}>
                       Confirmer
+                    </button>
+                    <button onClick={() => changerStatut(r.id, "TERMINE")}
+                      className="text-xs px-3 py-1.5 font-medium transition"
+                      style={{ background: "#f1f5f9", color: "#64748b", borderRadius: 8 }}>
+                      Terminer
                     </button>
                     <button onClick={() => changerStatut(r.id, "ANNULE")}
                       className="text-xs px-3 py-1.5 font-medium transition"

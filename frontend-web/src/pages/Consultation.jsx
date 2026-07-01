@@ -12,15 +12,29 @@ export default function Consultation() {
   const [ordonnances, setOrdonnances] = useState([])
   const [onglet, setOnglet] = useState("dossier")
   const [notesForm, setNotesForm] = useState("")
-  const [ordonnanceForm, setOrdonnanceForm] = useState({ contenu: "" })
+  const [ordonnanceForm, setOrdonnanceForm] = useState({
+    medicament: "", posologie: "", duree: "", notes: ""
+  })
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(true)
 
-  const medecinId = localStorage.getItem("userId") || 1
+  const statutStyle = {
+    "PLANIFIE": { background: "#e0ecff", color: "#4f8ef7" },
+    "CONFIRME": { background: "#dcfce7", color: "#15803d" },
+    "TERMINE": { background: "#f1f5f9", color: "#64748b" },
+    "ANNULE": { background: "#fee2e2", color: "#dc2626" },
+  }
+
+  const statutLabel = {
+    "PLANIFIE": "Planifié",
+    "CONFIRME": "Confirmé",
+    "TERMINE": "Terminé",
+    "ANNULE": "Annulé",
+  }
 
   useEffect(() => {
     Promise.all([
-      api.get(`/rdv/${medecinId}`),
+      api.get("/rdv"),
       api.get(`/dossier/patient/${patientId}`).catch(() => ({ data: null })),
       api.get(`/ordonnances/${patientId}`).catch(() => ({ data: [] }))
     ]).then(([rdvRes, dossierRes, ordRes]) => {
@@ -46,29 +60,18 @@ export default function Consultation() {
   const soumettreOrdonnance = async () => {
     try {
       await api.post("/ordonnances", {
-        contenu: ordonnanceForm.contenu,
-        date: new Date().toISOString(),
-        medecinId: parseInt(medecinId),
+        medicament: ordonnanceForm.medicament,
+        posologie: ordonnanceForm.posologie,
+        duree: ordonnanceForm.duree,
+        notes: ordonnanceForm.notes,
         patientId: parseInt(patientId)
       })
       setSuccess("Ordonnance créée avec succès !")
-      setOrdonnanceForm({ contenu: "" })
+      setOrdonnanceForm({ medicament: "", posologie: "", duree: "", notes: "" })
       const res = await api.get(`/ordonnances/${patientId}`)
       setOrdonnances(res.data)
       setTimeout(() => setSuccess(""), 3000)
     } catch (err) { console.error(err) }
-  }
-
-  const statutStyle = {
-    "CONFIRME": { background: "#dcfce7", color: "#15803d" },
-    "EN_ATTENTE": { background: "#ffedd5", color: "#c2410c" },
-    "ANNULE": { background: "#f1f5f9", color: "#94a3b8" },
-    "URGENT": { background: "#fee2e2", color: "#dc2626" },
-  }
-
-  const statutLabel = {
-    "CONFIRME": "Confirmé", "EN_ATTENTE": "En attente",
-    "ANNULE": "Annulé", "URGENT": "Urgent"
   }
 
   if (loading) return (
@@ -95,7 +98,7 @@ export default function Consultation() {
           {patient && (
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                style={{ background: "#4f8ef7", borderRadius: "50%" }}>
+                style={{ background: "#4f8ef7" }}>
                 {patient.prenom?.[0]}{patient.nom?.[0]}
               </div>
               <div>
@@ -159,7 +162,6 @@ export default function Consultation() {
               </div>
             ))}
 
-            {/* Notes médecin */}
             {dossier?.notes && (
               <div className="p-6"
                 style={{ background: "#ffffff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
@@ -210,9 +212,12 @@ export default function Consultation() {
                   {ordonnances.map((o, i) => (
                     <div key={i} className="px-4 py-3" style={{ background: "#f0f4ff", borderRadius: 12 }}>
                       <p className="text-xs mb-1" style={{ color: "#6b7280" }}>
-                        {new Date(o.date || o.createdAt).toLocaleDateString("fr-FR")}
+                        {new Date(o.createdAt).toLocaleDateString("fr-FR")}
                       </p>
-                      <p className="text-sm" style={{ color: "#1e293b" }}>{o.contenu}</p>
+                      <p className="text-sm font-medium" style={{ color: "#1e293b" }}>{o.medicament}</p>
+                      <p className="text-xs mt-1" style={{ color: "#6b7280" }}>Posologie : {o.posologie}</p>
+                      <p className="text-xs" style={{ color: "#6b7280" }}>Durée : {o.duree}</p>
+                      {o.notes && <p className="text-xs mt-1" style={{ color: "#94a3b8" }}>{o.notes}</p>}
                     </div>
                   ))}
                 </div>
@@ -252,17 +257,38 @@ export default function Consultation() {
             <h3 className="text-base font-semibold mb-6" style={{ color: "#1e293b" }}>
               Rédiger une ordonnance
             </h3>
-            <textarea value={ordonnanceForm.contenu}
-              onChange={e => setOrdonnanceForm({ contenu: e.target.value })}
-              placeholder="Médicament, posologie, durée du traitement, instructions..."
-              rows={8}
-              className="w-full px-4 py-3 text-sm outline-none resize-none"
-              style={{ border: "1px solid #e2e8f0", borderRadius: 12, color: "#1e293b" }} />
-            <button onClick={soumettreOrdonnance}
-              className="w-full py-3 text-sm font-medium transition mt-4"
-              style={{ background: "#4f8ef7", color: "#ffffff", borderRadius: 12 }}>
-              Enregistrer l'ordonnance
-            </button>
+            <div className="flex flex-col gap-4">
+              {[
+                { key: "medicament", label: "Médicament", placeholder: "Ex: Doliprane 1000mg" },
+                { key: "posologie", label: "Posologie", placeholder: "Ex: 1 comprimé 3 fois par jour" },
+                { key: "duree", label: "Durée", placeholder: "Ex: 7 jours" },
+              ].map(field => (
+                <div key={field.key}>
+                  <label className="text-xs font-medium uppercase tracking-wider mb-2 block"
+                    style={{ color: "#6b7280" }}>{field.label}</label>
+                  <input value={ordonnanceForm[field.key]}
+                    onChange={e => setOrdonnanceForm({ ...ordonnanceForm, [field.key]: e.target.value })}
+                    placeholder={field.placeholder}
+                    className="w-full px-4 py-3 text-sm outline-none"
+                    style={{ border: "1px solid #e2e8f0", borderRadius: 12, color: "#1e293b" }} />
+                </div>
+              ))}
+              <div>
+                <label className="text-xs font-medium uppercase tracking-wider mb-2 block"
+                  style={{ color: "#6b7280" }}>Notes (optionnel)</label>
+                <textarea value={ordonnanceForm.notes}
+                  onChange={e => setOrdonnanceForm({ ...ordonnanceForm, notes: e.target.value })}
+                  placeholder="Instructions supplémentaires..."
+                  rows={3}
+                  className="w-full px-4 py-3 text-sm outline-none resize-none"
+                  style={{ border: "1px solid #e2e8f0", borderRadius: 12, color: "#1e293b" }} />
+              </div>
+              <button onClick={soumettreOrdonnance}
+                className="w-full py-3 text-sm font-medium transition"
+                style={{ background: "#4f8ef7", color: "#ffffff", borderRadius: 12 }}>
+                Enregistrer l'ordonnance
+              </button>
+            </div>
           </div>
         )}
 
