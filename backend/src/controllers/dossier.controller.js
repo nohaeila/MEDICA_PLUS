@@ -76,4 +76,59 @@ const updateDossier = async (req, res) => {
   }
 };
 
-module.exports = { getDossier, updateDossier };
+const getDossierPatient = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const role = req.user.role;
+
+    if (role !== 'medecin') {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+
+    let dossier = await prisma.dossier.findUnique({
+      where: { patientId },
+      include: { patient: true }
+    });
+
+    if (!dossier) {
+      dossier = await prisma.dossier.create({
+        data: { patientId },
+        include: { patient: true }
+      });
+    }
+
+    return res.status(200).json(dossier);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+const updateDossierNotes = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const { notes } = req.body;
+    const role = req.user.role;
+
+    if (role !== 'medecin') {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+
+    let dossier = await prisma.dossier.findUnique({ where: { patientId } });
+    if (!dossier) {
+      dossier = await prisma.dossier.create({ data: { patientId } });
+    }
+
+    await prisma.dossier.update({
+      where: { patientId },
+      data: { notes }
+    });
+
+    return res.status(200).json({ message: 'Notes mises à jour' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+module.exports = { getDossier, updateDossier, getDossierPatient, updateDossierNotes };
