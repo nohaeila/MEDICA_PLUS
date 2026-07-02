@@ -4,7 +4,7 @@ import api from "../services/api"
 
 export default function Profil() {
   const [medecin, setMedecin] = useState(null)
-  const [form, setForm] = useState({ telephone: "", specialite: "", ville: "" })
+  const [form, setForm] = useState({ telephone: "", specialite: "", adresse: "" })
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(true)
 
@@ -14,7 +14,7 @@ export default function Profil() {
       setForm({
         telephone: res.data.telephone || "",
         specialite: res.data.specialite || "",
-        ville: res.data.ville || ""
+        adresse: res.data.adresse || ""
       })
       setLoading(false)
     }).catch(() => setLoading(false))
@@ -74,7 +74,7 @@ export default function Profil() {
                 <h3 className="text-lg font-bold" style={{ color: "#1e293b" }}>
                   Dr. {medecin?.prenom} {medecin?.nom}
                 </h3>
-                <p className="text-sm" style={{ color: "#6b7280" }}>{medecin?.user?.email}</p>
+                <p className="text-sm" style={{ color: "#6b7280" }}>{medecin?.email}</p>
               </div>
             </div>
 
@@ -83,7 +83,7 @@ export default function Profil() {
               {[
                 { label: "Nom", value: medecin?.nom },
                 { label: "Prénom", value: medecin?.prenom },
-                { label: "Email", value: medecin?.user?.email },
+                { label: "Email", value: medecin?.email },
               ].map((item, i) => (
                 <div key={i}>
                   <label className="text-xs font-medium uppercase tracking-wider mb-1 block"
@@ -102,7 +102,7 @@ export default function Profil() {
             <div className="flex flex-col gap-4">
               {[
                 { key: "specialite", label: "Spécialité", placeholder: "Ex: Médecine générale" },
-                { key: "ville", label: "Ville", placeholder: "Ex: Paris" },
+                { key: "adresse", label: "Adresse du cabinet", placeholder: "Ex: 123 Rue de Paris" },
                 { key: "telephone", label: "Téléphone", placeholder: "Ex: 06 12 34 56 78" },
               ].map(field => (
                 <div key={field.key}>
@@ -157,7 +157,7 @@ export default function Profil() {
                         <circle cx="12" cy="10" r="3"/>
                       </svg>
                     ),
-                    value: form.ville || medecin?.ville
+                    value: form.adresse || medecin?.adresse
                   },
                   {
                     icon: (
@@ -174,7 +174,7 @@ export default function Profil() {
                         <polyline points="22,6 12,13 2,6"/>
                       </svg>
                     ),
-                    value: medecin?.user?.email
+                    value: medecin?.email
                   },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-2">

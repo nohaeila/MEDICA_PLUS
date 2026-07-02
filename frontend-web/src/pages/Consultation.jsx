@@ -38,7 +38,7 @@ export default function Consultation() {
       api.get(`/dossier/patient/${patientId}`).catch(() => ({ data: null })),
       api.get(`/ordonnances/${patientId}`).catch(() => ({ data: [] }))
     ]).then(([rdvRes, dossierRes, ordRes]) => {
-      const rdvPatient = rdvRes.data.filter(r => r.patientId === parseInt(patientId))
+      const rdvPatient = rdvRes.data.filter(r => r.patientId === patientId)
       setRdvs(rdvPatient)
       if (rdvPatient.length > 0) setPatient(rdvPatient[0].patient)
       setDossier(dossierRes.data)
@@ -58,21 +58,19 @@ export default function Consultation() {
   }
 
   const soumettreOrdonnance = async () => {
-    try {
-      await api.post("/ordonnances", {
-        medicament: ordonnanceForm.medicament,
-        posologie: ordonnanceForm.posologie,
-        duree: ordonnanceForm.duree,
-        notes: ordonnanceForm.notes,
-        patientId: parseInt(patientId)
-      })
-      setSuccess("Ordonnance créée avec succès !")
-      setOrdonnanceForm({ medicament: "", posologie: "", duree: "", notes: "" })
-      const res = await api.get(`/ordonnances/${patientId}`)
-      setOrdonnances(res.data)
-      setTimeout(() => setSuccess(""), 3000)
-    } catch (err) { console.error(err) }
-  }
+  try {
+    await api.post("/ordonnances", {
+      patientId: patientId, // string UUID, pas parseInt
+      contenu: `${ordonnanceForm.medicament} — ${ordonnanceForm.posologie} — ${ordonnanceForm.duree}${ordonnanceForm.notes ? ' — ' + ordonnanceForm.notes : ''}`,
+      date: new Date().toISOString().split('T')[0]
+    });
+    setSuccess("Ordonnance créée avec succès !");
+    setOrdonnanceForm({ medicament: "", posologie: "", duree: "", notes: "" });
+    const res = await api.get("/ordonnances");
+    setOrdonnances(res.data);
+    setTimeout(() => setSuccess(""), 3000);
+  } catch (err) { console.error(err) }
+ };
 
   if (loading) return (
     <div className="flex min-h-screen" style={{ background: "#f0f4ff" }}>

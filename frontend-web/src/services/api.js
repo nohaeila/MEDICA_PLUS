@@ -1,9 +1,9 @@
 import axios from "axios"
-
+ 
 const api = axios.create({
-  baseURL: "http://192.168.1.167:5000/api",
+  baseURL: "http://10.31.32.128:5000/api",
 })
-
+ 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token")
   if (token) {
@@ -11,5 +11,5 @@ api.interceptors.request.use((config) => {
   }
   return config
 })
-
+ 
 export default api
